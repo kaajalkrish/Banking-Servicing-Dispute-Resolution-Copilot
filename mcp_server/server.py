@@ -19,12 +19,15 @@ Run standalone:  python -m mcp_server.server
 from __future__ import annotations
 
 import functools
+import inspect
 import json
+import time
 from typing import Any, Callable
 
 from mcp.server.fastmcp import FastMCP
 
 from mcp_server.data_access import DISPUTE_WINDOWS, Bank
+from mcp_server.transcript import record
 
 mcp = FastMCP("bank-servicing")
 _bank = Bank()
@@ -33,14 +36,26 @@ _KNOWN_ERRORS = (LookupError, ValueError, PermissionError)
 
 
 def _safe(fn: Callable[..., dict]) -> Callable[..., dict]:
-    """Turn known domain errors into structured error objects."""
+    """Turn known domain errors into structured errors AND transcript every call."""
+    sig = inspect.signature(fn)
 
     @functools.wraps(fn)
     def wrapper(*args: Any, **kwargs: Any) -> dict:
         try:
-            return fn(*args, **kwargs)
+            bound = sig.bind(*args, **kwargs)
+            bound.apply_defaults()
+            call_args = dict(bound.arguments)
+        except TypeError:
+            call_args = {"args": list(args), "kwargs": kwargs}
+        start = time.perf_counter()
+        try:
+            result = fn(*args, **kwargs)
         except _KNOWN_ERRORS as exc:
-            return {"error": {"type": type(exc).__name__, "message": str(exc)}}
+            result = {"error": {"type": type(exc).__name__, "message": str(exc)}}
+        latency_ms = (time.perf_counter() - start) * 1000
+        status = "error" if isinstance(result, dict) and "error" in result else "ok"
+        record("tools/call", fn.__name__, call_args, result, latency_ms, status)
+        return result
 
     return wrapper
 
@@ -98,7 +113,17 @@ def submit_service_request(customer_id: str, request_type: str, details: str = "
 @mcp.resource("bank://reference/dispute-windows")
 def dispute_windows() -> str:
     """Servicing reference: dispute eligibility windows (in days) by reason."""
-    return json.dumps(DISPUTE_WINDOWS, indent=2)
+    start = time.perf_counter()
+    payload = json.dumps(DISPUTE_WINDOWS, indent=2)
+    record(
+        "resources/read",
+        "bank://reference/dispute-windows",
+        {},
+        DISPUTE_WINDOWS,
+        (time.perf_counter() - start) * 1000,
+        "ok",
+    )
+    return payload
 
 
 if __name__ == "__main__":
