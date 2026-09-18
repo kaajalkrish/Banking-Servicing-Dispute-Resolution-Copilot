@@ -21,6 +21,12 @@ from typing import Any
 from src.common.masking import mask_text
 from src.config import settings
 
+# Windows terminals often default to a non-UTF-8 codepage; Gemini responses can
+# include en-dashes/emoji that would otherwise mangle into "?" or raise on write.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+
 
 def _print(text: str) -> None:
     print(mask_text(text))
