@@ -48,6 +48,17 @@ def get_tool(tools: list[Any], name: str) -> Any | None:
     return None
 
 
+def memory_context_block(state: dict[str, Any]) -> str:
+    """Format recalled long-term memories (built by graph.py's build_context_node
+    from src/context/select.py) as a short block for an LLM prompt, or "" if
+    there is nothing recalled for this turn."""
+    memories = state.get("context", {}).get("memories", [])
+    if not memories:
+        return ""
+    bullet_list = "\n".join(f"- {m}" for m in memories)
+    return f"\nKnown context about this customer from prior sessions:\n{bullet_list}\n"
+
+
 async def compose_answer(llm: Any, system: str, human: str) -> str:
     """One LLM call to phrase an answer from tool context.
 

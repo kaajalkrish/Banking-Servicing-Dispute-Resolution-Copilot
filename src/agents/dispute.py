@@ -17,7 +17,8 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from src.agents._common import compose_answer, get_tool, latest_user_text, record_result
+from src.agents._common import compose_answer, get_tool, latest_user_text, memory_context_block, record_result
+from src.context.isolate import isolate_for_worker
 from src.context.quarantine import extract_dispute_fields
 from src.tools.resilience import resilient_ainvoke
 
@@ -30,7 +31,8 @@ SYSTEM = (
 
 
 async def dispute_node(state: dict[str, Any], *, tools: list[Any], llm: Any) -> dict[str, Any]:
-    text = latest_user_text(state)
+    iso = isolate_for_worker(state, "dispute")
+    text = latest_user_text(iso)
     fields = await extract_dispute_fields(llm, text)
 
     if not fields.transaction_id:
@@ -41,7 +43,7 @@ async def dispute_node(state: dict[str, Any], *, tools: list[Any], llm: Any) -> 
         return record_result(state, "dispute", msg, requires_human_review=True)
 
     reason = fields.reason_hint if fields.reason_hint != "unclear" else "unrecognized_charge"
-    customer_id = state["customer_id"]
+    customer_id = iso["customer_id"]
 
     eligibility_tool = get_tool(tools, "check_dispute_eligibility")
     eligibility = await resilient_ainvoke(
@@ -75,7 +77,7 @@ async def dispute_node(state: dict[str, Any], *, tools: list[Any], llm: Any) -> 
     answer = await compose_answer(
         llm,
         SYSTEM,
-        f"Customer said: {text}\n\n"
+        f"Customer said: {text}\n{memory_context_block(iso)}\n"
         f"Eligibility check: {json.dumps(eligibility, default=str)}\n"
         f"Supporting citation: {citation}\n"
         f"Draft dispute result: {json.dumps(dispute_result, default=str)}\n\n"

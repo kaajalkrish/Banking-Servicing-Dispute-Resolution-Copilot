@@ -12,11 +12,13 @@ from __future__ import annotations
 from typing import Any
 
 from src.agents._common import get_tool, latest_user_text, record_result
+from src.context.isolate import isolate_for_worker
 from src.tools.resilience import resilient_ainvoke
 
 
 async def product_info_node(state: dict[str, Any], *, tools: list[Any], llm: Any) -> dict[str, Any]:
-    text = latest_user_text(state)
+    iso = isolate_for_worker(state, "product_info")
+    text = latest_user_text(iso)
     tool = get_tool(tools, "policy_search")
     if tool is None:
         return record_result(

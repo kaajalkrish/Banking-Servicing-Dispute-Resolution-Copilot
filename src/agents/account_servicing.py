@@ -9,7 +9,8 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from src.agents._common import compose_answer, get_tool, latest_user_text, record_result
+from src.agents._common import compose_answer, get_tool, latest_user_text, memory_context_block, record_result
+from src.context.isolate import isolate_for_worker
 from src.tools.resilience import resilient_ainvoke
 
 SYSTEM = (
@@ -55,7 +56,11 @@ def _service_request_type(text: str) -> str:
 async def account_servicing_node(
     state: dict[str, Any], *, tools: list[Any], llm: Any
 ) -> dict[str, Any]:
-    text = latest_user_text(state)
+    # Isolated context window: this worker only reads the state slice it needs
+    # (customer_id, messages, account_ref) — never another worker's draft or
+    # dispute state (src/context/isolate.py).
+    iso = isolate_for_worker(state, "account_servicing")
+    text = latest_user_text(iso)
     tool_name = _choose(text)
     tool = get_tool(tools, tool_name)
 
@@ -64,20 +69,21 @@ async def account_servicing_node(
 
     if tool_name == "submit_service_request":
         args: dict[str, Any] = {
-            "customer_id": state["customer_id"],
+            "customer_id": iso["customer_id"],
             "request_type": _service_request_type(text),
             "details": text[:500],
         }
     else:
-        args = {"customer_id": state["customer_id"]}
-        if state.get("account_ref"):
-            args["account_ref"] = state["account_ref"]
+        args = {"customer_id": iso["customer_id"]}
+        if iso.get("account_ref"):
+            args["account_ref"] = iso["account_ref"]
 
     result = await resilient_ainvoke(tool, args, tool_name=tool_name)
     answer = await compose_answer(
         llm,
         SYSTEM,
-        f"Customer asked: {text}\n\nTool `{tool_name}` returned:\n{json.dumps(result, default=str)}\n\n"
+        f"Customer asked: {text}\n{memory_context_block(iso)}\n"
+        f"Tool `{tool_name}` returned:\n{json.dumps(result, default=str)}\n\n"
         "Write a concise, accurate answer for the customer.",
     )
     return record_result(state, "account_servicing", answer)
