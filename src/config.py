@@ -49,12 +49,12 @@ class Settings:
 
     # --- Gemini (the only provider) ---
     google_api_key: str = field(default_factory=lambda: os.environ.get("GOOGLE_API_KEY", ""))
-    gemini_model: str = field(default_factory=lambda: _get("GEMINI_MODEL", "gemini-2.5-flash"))
+    gemini_model: str = field(default_factory=lambda: _get("GEMINI_MODEL", "gemini-3.5-flash"))
     gemini_model_fast: str = field(
-        default_factory=lambda: _get("GEMINI_MODEL_FAST", "gemini-2.5-flash-lite")
+        default_factory=lambda: _get("GEMINI_MODEL_FAST", "gemini-3.5-flash-lite")
     )
     gemini_judge_model: str = field(
-        default_factory=lambda: _get("GEMINI_JUDGE_MODEL", _get("GEMINI_MODEL", "gemini-2.5-flash"))
+        default_factory=lambda: _get("GEMINI_JUDGE_MODEL", _get("GEMINI_MODEL", "gemini-3.5-flash"))
     )
 
     # --- Filesystem locations ---
