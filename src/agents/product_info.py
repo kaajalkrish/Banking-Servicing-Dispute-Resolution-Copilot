@@ -1,39 +1,37 @@
 """Product-info worker: product, fee and servicing-policy questions (AC-03).
 
-Phase 1 answers from a small static fee reference and abstains when a question
-is outside it. Phase 2 replaces this with the agentic-RAG tool over the policy
-corpus (grounded, cited answers with proper abstention).
+Answers only from policy_search (the agentic-RAG tool over data/policy_corpus)
+with citations, and abstains rather than guessing when the corpus does not
+support an answer -- policy_search itself handles grading, query rewrite and
+the abstention decision (src/tools/rag_tool.py); this worker just calls it and
+surfaces the result.
 """
 
 from __future__ import annotations
 
 from typing import Any
 
-from src.agents._common import compose_answer, latest_user_text, record_result
-
-# Minimal synthetic fee reference (superseded by the RAG policy corpus in P2).
-FEE_REFERENCE = {
-    "monthly_maintenance_fee_usd": 5.0,
-    "overdraft_fee_usd": 30.0,
-    "atm_out_of_network_fee_usd": 3.0,
-    "foreign_transaction_fee_pct": 3.0,
-    "card_replacement_fee_usd": 0.0,
-}
-
-SYSTEM = (
-    "You are a retail-bank product-and-fee assistant. Answer ONLY from the provided "
-    "fee reference. If the question is not covered by it, say you don't have that "
-    "information yet and offer to connect the customer to the right resource — do "
-    "not guess."
-)
+from src.agents._common import get_tool, latest_user_text, record_result
+from src.tools.resilience import resilient_ainvoke
 
 
 async def product_info_node(state: dict[str, Any], *, tools: list[Any], llm: Any) -> dict[str, Any]:
     text = latest_user_text(state)
-    answer = await compose_answer(
-        llm,
-        SYSTEM,
-        f"Customer asked: {text}\n\nFee reference (USD unless noted):\n{FEE_REFERENCE}\n\n"
-        "Answer concisely, or abstain if not covered.",
-    )
-    return record_result(state, "product_info", answer)
+    tool = get_tool(tools, "policy_search")
+    if tool is None:
+        return record_result(
+            state, "product_info", "That capability is unavailable right now.", requires_human_review=True
+        )
+
+    result = await resilient_ainvoke(tool, {"query": text}, tool_name="policy_search")
+    if isinstance(result, dict) and result.get("ok") is False:
+        # resilient_ainvoke's own timeout/error failure shape
+        return record_result(
+            state, "product_info", "I couldn't look that up right now. Let me connect you to an agent.",
+            requires_human_review=True,
+        )
+
+    answer = result.get("answer", "")
+    citations = result.get("citations", [])
+    abstained = result.get("abstained", False)
+    return record_result(state, "product_info", answer, requires_human_review=abstained, citations=citations)

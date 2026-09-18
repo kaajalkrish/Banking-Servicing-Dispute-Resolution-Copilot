@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-import re
 from typing import Any
 
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from src.llm import ainvoke_with_backoff
-
-_TXN_RE = re.compile(r"\bTXN\d{3,}\b", re.IGNORECASE)
 
 
 def extract_text(content: Any) -> str:
@@ -42,11 +39,6 @@ def latest_user_text(state: dict[str, Any]) -> str:
             content = getattr(msg, "content", "")
             return content if isinstance(content, str) else str(content)
     return ""
-
-
-def find_transaction_id(text: str) -> str | None:
-    m = _TXN_RE.search(text or "")
-    return m.group(0).upper() if m else None
 
 
 def get_tool(tools: list[Any], name: str) -> Any | None:

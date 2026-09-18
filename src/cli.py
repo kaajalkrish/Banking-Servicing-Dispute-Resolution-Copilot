@@ -153,9 +153,13 @@ async def cmd_run(args: argparse.Namespace) -> int:
 
 
 async def _load_tools() -> list[Any]:
+    from src.llm import get_llm
     from src.mcp_client import get_mcp_tools
+    from src.tools.rag_tool import PolicySearchTool
 
-    return await get_mcp_tools()
+    mcp_tools = await get_mcp_tools()
+    rag_tool = PolicySearchTool(llm=get_llm("default"))
+    return [*mcp_tools, rag_tool]
 
 
 # --------------------------------------------------------------------------- #
