@@ -162,6 +162,65 @@ class Bank:
         self._service_requests[sid] = rec
         return {"request_id": sid, "request_type": request_type, "status": "received"}
 
+    def check_dispute_eligibility(
+        self, customer_id: str, transaction_id: str, reason: str
+    ) -> dict[str, Any]:
+        """Deterministic eligibility check against the dispute-windows reference.
+
+        Rules: the window (days from posting date) for the given reason; the
+        transaction must belong to the customer; a transaction already under an
+        open/under-review dispute cannot be disputed again (§ dispute_timelines
+        'One Dispute Per Transaction').
+        """
+        window_key = _REASON_TO_WINDOW_KEY.get(reason)
+        if window_key is None:
+            raise ValueError(f"reason must be one of {sorted(_REASON_TO_WINDOW_KEY)}")
+
+        txn = next((t for t in self.transactions if t["transaction_id"] == transaction_id), None)
+        if txn is None:
+            raise LookupError(f"transaction {transaction_id} not found")
+        owned_accts = {a["account_number"] for a in self._accounts_for(customer_id)}
+        if txn["account_number"] not in owned_accts:
+            raise PermissionError("transaction does not belong to this customer")
+
+        window_days = DISPUTE_WINDOWS[window_key]
+        txn_date = date.fromisoformat(txn["date"])
+        days_since = (date.today() - txn_date).days
+
+        existing = [
+            d
+            for d in self._disputes.values()
+            if d["transaction_id"] == transaction_id and d["status"] in ("draft", "open", "under_review")
+        ]
+
+        reasons: list[str] = []
+        eligible = True
+        if days_since > window_days:
+            eligible = False
+            reasons.append(f"outside the {window_days}-day window ({days_since} days since transaction)")
+        if existing:
+            eligible = False
+            reasons.append(f"already has an active dispute: {existing[0]['dispute_id']}")
+        if eligible:
+            reasons.append(f"within the {window_days}-day window ({days_since} days since transaction)")
+
+        return {
+            "transaction_id": transaction_id,
+            "reason": reason,
+            "eligible": eligible,
+            "window_days": window_days,
+            "days_since_transaction": days_since,
+            "explanation": reasons,
+        }
+
+
+_REASON_TO_WINDOW_KEY = {
+    "unrecognized_charge": "unauthorized_transaction_days",
+    "unauthorized_transaction": "unauthorized_transaction_days",
+    "duplicate_charge": "duplicate_charge_days",
+    "goods_not_received": "goods_not_received_days",
+    "billing_error": "billing_error_days",
+}
 
 # Dispute-window reference policy (served as an MCP resource).
 DISPUTE_WINDOWS = {
