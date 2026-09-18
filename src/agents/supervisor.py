@@ -14,6 +14,7 @@ from typing import Any
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from src.agents._common import latest_user_text
+from src.llm import ainvoke_with_backoff
 from src.schemas import RouteDecision
 
 _VALID_ROUTES = {
@@ -28,7 +29,9 @@ _VALID_ROUTES = {
 SYSTEM = (
     "You are the supervisor of a retail-bank servicing copilot. Choose the single "
     "best worker for the customer's request:\n"
-    "- account_servicing: balance, recent transactions, statement summary\n"
+    "- account_servicing: balance, recent transactions, statement summary, or a "
+    "simple service request (lost/stolen card replacement, a statement copy, a "
+    "credit-limit change)\n"
     "- dispute: a disputed / unauthorized / duplicate transaction\n"
     "- product_info: product, fee or servicing-policy questions\n"
     "- intake: the request is ambiguous and needs one clarifying question\n"
@@ -57,8 +60,10 @@ async def supervisor_node(state: dict[str, Any], *, llm: Any) -> dict[str, Any]:
 
     text = latest_user_text(state)
     structured = llm.with_structured_output(RouteDecision)
-    decision: RouteDecision = await structured.ainvoke(
-        [SystemMessage(content=SYSTEM), HumanMessage(content=text)]
+    # Retries transient errors (timeouts/429/5xx) so a momentary Gemini hiccup
+    # degrades gracefully instead of crashing the run (NFR-04).
+    decision: RouteDecision = await ainvoke_with_backoff(
+        structured, [SystemMessage(content=SYSTEM), HumanMessage(content=text)]
     )
     route = "intake" if decision.needs_clarification else decision.worker
     if route not in _VALID_ROUTES:
