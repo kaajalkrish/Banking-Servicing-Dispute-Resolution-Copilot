@@ -171,16 +171,22 @@ def build_graph(
 
 
 @asynccontextmanager
-async def open_checkpointer() -> AsyncIterator[Any]:
-    """Async context manager yielding an AsyncSqliteSaver at the configured path.
+async def open_checkpointer(conn_string: str | None = None) -> AsyncIterator[Any]:
+    """Async context manager yielding an AsyncSqliteSaver.
 
-    The sqlite file lives under STATE_DIR (gitignored) so short-term thread state
-    persists across turns without ever being committed.
+    Defaults to STATE_DIR/checkpoints.sqlite (gitignored) so short-term thread
+    state persists across turns without ever being committed. Tests that need
+    an isolated store should pass an explicit conn_string (e.g. a pytest
+    tmp_path) rather than monkeypatching STATE_DIR — `settings` is a
+    module-level singleton resolved once at import time, so an env var set
+    later in a test has no effect on it (verified: a monkeypatch-only test
+    silently shared the real data/state/checkpoints.sqlite file and leaked
+    state across pytest runs on a reused thread id).
     """
     from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 
     settings.ensure_dirs()
-    conn = str(settings.state_dir / "checkpoints.sqlite")
+    conn = conn_string or str(settings.state_dir / "checkpoints.sqlite")
     async with AsyncSqliteSaver.from_conn_string(conn) as saver:
         yield saver
 

@@ -32,9 +32,7 @@ async def test_graph_without_memory_store_is_unchanged():
     assert out["final_answer"]["answer"] == "Balance is 100."
 
 
-async def test_recalled_memory_reaches_worker_prompt(tmp_path, monkeypatch):
-    monkeypatch.setenv("STATE_DIR", str(tmp_path))
-
+async def test_recalled_memory_reaches_worker_prompt(tmp_path):
     captured: list[str] = []
 
     class CapturingWorkerLLM:
@@ -42,7 +40,10 @@ async def test_recalled_memory_reaches_worker_prompt(tmp_path, monkeypatch):
             captured.append(str(messages[-1].content))
             return AIMessage(content="Your balance is 100 USD.")
 
-    async with open_memory_store() as mstore, open_checkpointer() as cstore:
+    async with (
+        open_memory_store(str(tmp_path / "memory.sqlite")) as mstore,
+        open_checkpointer(str(tmp_path / "checkpoints.sqlite")) as cstore,
+    ):
         await remember(mstore, "C0001", "pref-1", {"content": "Customer prefers to be called Mr. Smith."})
 
         g = build_graph(
@@ -61,9 +62,7 @@ async def test_recalled_memory_reaches_worker_prompt(tmp_path, monkeypatch):
     assert any("Mr. Smith" in p for p in captured), "recalled memory never reached the worker prompt"
 
 
-async def test_save_memory_runs_once_scoped_to_customer(tmp_path, monkeypatch):
-    monkeypatch.setenv("STATE_DIR", str(tmp_path))
-
+async def test_save_memory_runs_once_scoped_to_customer(tmp_path):
     calls: list[tuple[list, dict]] = []
 
     class FakeExtractor:
@@ -71,7 +70,10 @@ async def test_save_memory_runs_once_scoped_to_customer(tmp_path, monkeypatch):
             calls.append((state["messages"], config))
             return []
 
-    async with open_memory_store() as mstore, open_checkpointer() as cstore:
+    async with (
+        open_memory_store(str(tmp_path / "memory.sqlite")) as mstore,
+        open_checkpointer(str(tmp_path / "checkpoints.sqlite")) as cstore,
+    ):
         g = build_graph(
             supervisor_llm=FakeSupervisorLLM("account_servicing"),
             worker_llm=FakeWorkerLLM("Balance is 100."),

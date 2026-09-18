@@ -33,14 +33,19 @@ def customer_namespace(customer_id: str) -> tuple[str, ...]:
 
 
 @asynccontextmanager
-async def open_memory_store() -> AsyncIterator[Any]:
-    """Async context manager yielding an AsyncSqliteStore at STATE_DIR/memory.sqlite,
-    configured with a local embedding index so asearch() does real semantic
-    search rather than a no-op/exact-match fallback."""
+async def open_memory_store(conn_string: str | None = None) -> AsyncIterator[Any]:
+    """Async context manager yielding an AsyncSqliteStore, configured with a
+    local embedding index so asearch() does real semantic search rather than a
+    no-op/exact-match fallback.
+
+    Defaults to STATE_DIR/memory.sqlite (gitignored). Tests that need an
+    isolated store should pass an explicit conn_string rather than
+    monkeypatching STATE_DIR — see open_checkpointer()'s docstring for why
+    that doesn't work (settings is a module-level singleton)."""
     from langgraph.store.sqlite.aio import AsyncSqliteStore
 
     settings.ensure_dirs()
-    conn = str(settings.state_dir / "memory.sqlite")
+    conn = conn_string or str(settings.state_dir / "memory.sqlite")
     index_config = {"dims": EMBEDDING_DIMS, "embed": embed_texts, "fields": ["content"]}
     async with AsyncSqliteStore.from_conn_string(conn, index=index_config) as store:
         await store.setup()
