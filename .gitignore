@@ -1,0 +1,37 @@
+# secrets & env
+.env
+.env.*
+!.env.example
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# runtime state (regenerable, never evidence)
+.phoenix/
+.deepeval/
+data/chroma/
+data/state/
+artifacts_regen/
+*.sqlite
+*.sqlite3
+*.db
+
+# local notes and archives
+notes/*.local.md
+*.zip
+*.bundle
+
+# editors / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
