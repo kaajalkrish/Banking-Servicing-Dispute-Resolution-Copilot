@@ -27,6 +27,7 @@ artifacts_regen/
 
 # local notes and archives
 notes/*.local.md
+STATUS.md
 *.zip
 *.bundle
 
