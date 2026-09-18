@@ -1,0 +1,23 @@
+# Phase 1 base stack — pinned to versions verified installable on Python 3.11+ (tested on 3.12.6).
+# Gemini is the ONLY model provider (ref-doc.md §3.4). No other LLM SDKs.
+# Later phases append their own deps (RAG, observability, security, evaluation, API).
+
+# --- Agent framework / graph ---
+langgraph==1.2.11
+langgraph-checkpoint-sqlite==3.1.1
+aiosqlite==0.22.1
+
+# --- LLM provider (Gemini only) ---
+langchain-google-genai==4.4.0
+
+# --- Interoperability (MCP) ---
+mcp==1.30.0
+langchain-mcp-adapters==0.3.2
+
+# --- Data modelling / config ---
+pydantic==2.13.5
+python-dotenv==1.2.3
+
+# --- Testing ---
+pytest==9.1.1
+pytest-asyncio==1.4.0
