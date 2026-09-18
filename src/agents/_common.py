@@ -7,7 +7,31 @@ from typing import Any
 
 from langchain_core.messages import HumanMessage, SystemMessage
 
+from src.llm import ainvoke_with_backoff
+
 _TXN_RE = re.compile(r"\bTXN\d{3,}\b", re.IGNORECASE)
+
+
+def extract_text(content: Any) -> str:
+    """Normalize a chat message's content to plain text.
+
+    Older Gemini models return a plain string. Gemini 3.x returns a list of
+    content-part dicts (``[{'type': 'text', 'text': ..., 'extras': {...}}]``,
+    the 'extras' carrying an internal signature blob we must never surface).
+    This extracts and concatenates just the text parts.
+    """
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for part in content:
+            if isinstance(part, dict) and part.get("type") == "text":
+                parts.append(part.get("text", ""))
+            elif isinstance(part, str):
+                parts.append(part)
+        if parts:
+            return "".join(parts)
+    return str(content)
 
 
 def latest_user_text(state: dict[str, Any]) -> str:
@@ -33,10 +57,16 @@ def get_tool(tools: list[Any], name: str) -> Any | None:
 
 
 async def compose_answer(llm: Any, system: str, human: str) -> str:
-    """One structured-free LLM call to phrase an answer from tool context."""
-    resp = await llm.ainvoke([SystemMessage(content=system), HumanMessage(content=human)])
-    content = getattr(resp, "content", resp)
-    return content if isinstance(content, str) else str(content)
+    """One LLM call to phrase an answer from tool context.
+
+    Retries transient errors (timeouts/429/5xx) via ainvoke_with_backoff so a
+    momentary Gemini hiccup degrades gracefully instead of crashing the run
+    (NFR-04), and normalizes the response content across model versions.
+    """
+    resp = await ainvoke_with_backoff(
+        llm, [SystemMessage(content=system), HumanMessage(content=human)]
+    )
+    return extract_text(getattr(resp, "content", resp))
 
 
 def record_result(
