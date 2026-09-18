@@ -11,8 +11,9 @@ build_graph injects the models and tools so tests can pass fakes (no network).
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 from functools import partial
-from typing import Any
+from typing import Any, AsyncIterator
 
 from langchain_core.messages import AIMessage
 from langgraph.graph import END, START, StateGraph
@@ -23,6 +24,7 @@ from src.agents.escalate import escalate_node
 from src.agents.intake import intake_node
 from src.agents.product_info import product_info_node
 from src.agents.supervisor import route_from_supervisor, supervisor_node
+from src.config import settings
 from src.schemas import FinalAnswer
 from src.state import CopilotState
 
@@ -91,3 +93,26 @@ def build_graph(*, supervisor_llm: Any, worker_llm: Any, tools: list[Any], check
     g.add_edge("finalize", END)
 
     return g.compile(checkpointer=checkpointer)
+
+
+@asynccontextmanager
+async def open_checkpointer() -> AsyncIterator[Any]:
+    """Async context manager yielding an AsyncSqliteSaver at the configured path.
+
+    The sqlite file lives under STATE_DIR (gitignored) so short-term thread state
+    persists across turns without ever being committed.
+    """
+    from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
+
+    settings.ensure_dirs()
+    conn = str(settings.state_dir / "checkpoints.sqlite")
+    async with AsyncSqliteSaver.from_conn_string(conn) as saver:
+        yield saver
+
+
+def run_config(thread_id: str) -> dict[str, Any]:
+    """Invoke config: the checkpointer thread id and the recursion limit (NFR-04)."""
+    return {
+        "configurable": {"thread_id": thread_id},
+        "recursion_limit": settings.recursion_limit,
+    }

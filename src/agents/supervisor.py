@@ -40,6 +40,16 @@ SYSTEM = (
 async def supervisor_node(state: dict[str, Any], *, llm: Any) -> dict[str, Any]:
     """Increment the step counter and decide the next route."""
     step = int(state.get("step_count", 0)) + 1
+    max_steps = int(state.get("max_steps", 0)) or 12
+
+    # Loop/cascade guard: too many hops -> finalize with escalation (§7.6, NFR-04).
+    if step > max_steps:
+        return {
+            "route": "finalize",
+            "escalated": True,
+            "requires_human_review": True,
+            "step_count": step,
+        }
 
     # If a worker has already answered, we are done -> finalize.
     if state.get("worker_results"):
