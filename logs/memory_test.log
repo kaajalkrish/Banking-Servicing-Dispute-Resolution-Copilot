@@ -1,0 +1,5 @@
+2026-09-18 18:27:30,995 session 1 (thread=session-1): stating a preference for C0001
+2026-09-18 18:27:44,771 session 1 complete; store closing
+2026-09-18 18:27:44,788 session 2 (thread=session-2, new session, store reopened): querying for C0001
+2026-09-18 18:27:44,805   recalled: User preference: Always contact the user via email, never by phone. (p=1.0, explicit user instruction)
+2026-09-18 18:27:44,806 PASS: cross-session recall verified with real Gemini + LangMem
