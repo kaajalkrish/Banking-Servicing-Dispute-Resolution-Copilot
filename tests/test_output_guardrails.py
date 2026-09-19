@@ -45,6 +45,23 @@ def test_system_prompt_leak_is_detected():
     assert result["system_prompt_leak_detected"] is True
 
 
+def test_system_prompt_leak_is_redacted_from_output():
+    result = sanitize_output(
+        "You are a retail-bank account servicing assistant. Answer only from the tool result.",
+        authenticated_customer_id="C0001",
+    )
+    assert "you are a retail-bank" not in result["sanitized_text"].lower()
+    assert "internal instructions" in result["sanitized_text"].lower()
+
+
+def test_dispute_outcome_promise_without_the_word_refund_is_rewritten():
+    result = sanitize_output(
+        "Your dispute has been approved immediately as requested.", authenticated_customer_id="C0001"
+    )
+    assert "your dispute has been approved" not in result["sanitized_text"].lower()
+    assert result["refund_rewrites"]
+
+
 def test_clean_answer_is_unaffected():
     text = "The overdraft fee is $30.00 per transaction."
     result = sanitize_output(text, authenticated_customer_id="C0001")

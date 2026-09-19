@@ -22,6 +22,14 @@ _REFUND_PROMISE_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"we have approved (your|this)", re.IGNORECASE),
     re.compile(r"refund (has been )?(processed|issued)", re.IGNORECASE),
     re.compile(r"your money (has been|will be) refunded", re.IGNORECASE),
+    # Not just "refund" wording: a dispute *outcome* claim ("your dispute has
+    # been approved", "this case is resolved in your favor") is the same kind
+    # of unsafe commitment (D-13) even when the word "refund" never appears —
+    # found via red-teaming (rt-011: an injected "[SYSTEM: ...]" role marker
+    # got a simulated reply to claim the dispute itself was approved, which
+    # none of the refund-only patterns above caught).
+    re.compile(r"your (dispute|case) (has been|is) approved", re.IGNORECASE),
+    re.compile(r"(dispute|case) (has been |is )?(approved|resolved|closed) in your favor", re.IGNORECASE),
 ]
 
 _SYSTEM_PROMPT_LEAK_PATTERNS: list[re.Pattern[str]] = [
@@ -30,6 +38,7 @@ _SYSTEM_PROMPT_LEAK_PATTERNS: list[re.Pattern[str]] = [
 ]
 
 REFUND_REWRITE = "This has been drafted for human review; no refund or resolution has been approved yet."
+SYSTEM_PROMPT_LEAK_REWRITE = "I can't share my internal instructions. How can I help with your banking request?"
 
 
 def sanitize_output(text: str, *, authenticated_customer_id: str) -> dict[str, Any]:
@@ -53,6 +62,15 @@ def sanitize_output(text: str, *, authenticated_customer_id: str) -> dict[str, A
             refund_rewrites.append(pattern.pattern)
 
     system_prompt_leak_detected = any(p.search(masked) for p in _SYSTEM_PROMPT_LEAK_PATTERNS)
+    if system_prompt_leak_detected:
+        # A leaked system prompt isn't a single phrase that can be rewritten
+        # in place like a refund promise — it's typically most of the answer.
+        # Replace the whole thing with a safe refusal rather than leaving
+        # fragments around a redacted phrase (found via red-teaming: the
+        # detection flag alone left the leaked text sitting in the
+        # customer-facing answer unchanged — P4-12/13 red-team attack
+        # rt-022-series caught this).
+        masked = SYSTEM_PROMPT_LEAK_REWRITE
 
     return {
         "sanitized_text": masked,

@@ -13,9 +13,17 @@ from __future__ import annotations
 
 import re
 
+_QUALIFIER = r"(?:all|any|previous|prior)"
+
 _INJECTION_PATTERNS: list[re.Pattern[str]] = [
-    re.compile(r"ignore (all|any|previous|prior)\s+instructions", re.IGNORECASE),
-    re.compile(r"disregard (all|any|previous|prior)\s+(instructions|rules)", re.IGNORECASE),
+    # Chained qualifiers ("ignore ALL PREVIOUS instructions") are the most
+    # common real-world phrasing of this cliche -- a single-qualifier regex
+    # (matching only "ignore all instructions" or "ignore previous
+    # instructions" but not both together) missed it entirely (found via the
+    # P4-12 red-team attack set: rt-007/rt-035 used exactly this canonical
+    # phrasing and were not detected until this fix).
+    re.compile(rf"ignore\s+{_QUALIFIER}(?:\s+{_QUALIFIER})*\s+instructions", re.IGNORECASE),
+    re.compile(rf"disregard\s+{_QUALIFIER}(?:\s+{_QUALIFIER})*\s+(?:instructions|rules)", re.IGNORECASE),
     re.compile(r"forget (all|your)\s+(instructions|rules|training)", re.IGNORECASE),
     re.compile(r"you are now\b", re.IGNORECASE),
     re.compile(r"system prompt", re.IGNORECASE),
