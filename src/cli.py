@@ -37,6 +37,9 @@ def _print(text: str) -> None:
 # --------------------------------------------------------------------------- #
 async def cmd_mcp_demo(_args: argparse.Namespace) -> int:
     from src.mcp_client import get_client, get_dispute_windows, get_mcp_tools
+    from src.observability.tracing import flush_tracing, init_tracing
+
+    init_tracing()  # called on the run path (not merely imported), P3-05
 
     client = get_client()
     tools = await get_mcp_tools(client)
@@ -63,6 +66,7 @@ async def cmd_mcp_demo(_args: argparse.Namespace) -> int:
     windows = await get_dispute_windows(client)
     _print(f"resource bank://reference/dispute-windows -> {windows[:80]}...")
     _print("mcp-demo complete; transcript at logs/mcp_transcript.jsonl")
+    flush_tracing()
     return 0
 
 
@@ -78,12 +82,15 @@ async def _answer_for(out: dict[str, Any]) -> str:
 
 
 async def cmd_chat(args: argparse.Namespace) -> int:
+    from src.common.ids import new_run_id
     from src.graph import build_graph, open_checkpointer, run_config
     from src.llm import get_llm
     from src.memory.long_term import build_extractor, open_memory_store
+    from src.observability.tracing import flush_tracing, init_tracing, traced_run
     from src.state import new_state
 
     settings.require_api_key()  # fail fast with a clear message if unset
+    init_tracing()  # called before graph execution (not merely imported), P3-05
     tools = await _load_tools()
     thread_id = args.thread_id or f"chat-{args.customer_id}"
     worker_llm = get_llm("default")
@@ -99,14 +106,19 @@ async def cmd_chat(args: argparse.Namespace) -> int:
         )
 
         async def turn(text: str) -> None:
-            out = await graph.ainvoke(
-                new_state(args.customer_id, text, max_steps=settings.max_steps),
-                run_config(thread_id),
-            )
+            # One run_id per turn (D-04): the finest useful granularity for a
+            # later failure citation to point at exactly which turn failed.
+            run_id = new_run_id()
+            with traced_run(run_id):
+                out = await graph.ainvoke(
+                    new_state(args.customer_id, text, max_steps=settings.max_steps),
+                    run_config(thread_id),
+                )
             _print("copilot> " + await _answer_for(out))
 
         if args.message:
             await turn(args.message)
+            flush_tracing()
             return 0
 
         _print(f"Chat as {args.customer_id} (thread {thread_id}). Type 'exit' to quit.")
@@ -119,16 +131,20 @@ async def cmd_chat(args: argparse.Namespace) -> int:
                 break
             if text:
                 await turn(text)
+    flush_tracing()
     return 0
 
 
 async def cmd_run(args: argparse.Namespace) -> int:
+    from src.common.ids import new_run_id
     from src.graph import build_graph, open_checkpointer, run_config
     from src.llm import get_llm
     from src.memory.long_term import build_extractor, open_memory_store
+    from src.observability.tracing import flush_tracing, init_tracing, traced_run
     from src.state import new_state
 
     settings.require_api_key()
+    init_tracing()  # called before graph execution (not merely imported), P3-05
     path = Path(args.inputs)
     if not path.exists():
         _print(f"inputs file not found: {path}")
@@ -152,11 +168,14 @@ async def cmd_run(args: argparse.Namespace) -> int:
             _print(f"\n=== {thread_id} ({cid}) ===")
             for text in conv.get("turns", []):
                 _print(f"you> {text}")
-                out = await graph.ainvoke(
-                    new_state(cid, text, max_steps=settings.max_steps),
-                    run_config(thread_id),
-                )
+                run_id = new_run_id()
+                with traced_run(run_id):
+                    out = await graph.ainvoke(
+                        new_state(cid, text, max_steps=settings.max_steps),
+                        run_config(thread_id),
+                    )
                 _print("copilot> " + await _answer_for(out))
+    flush_tracing()
     return 0
 
 

@@ -24,8 +24,9 @@ would be slow and noisy.
 from __future__ import annotations
 
 import os
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator
 
 from src.config import settings
 
@@ -60,6 +61,34 @@ def init_tracing(project_name: str | None = None) -> Any | None:
         batch=False,  # spans are visible immediately; fine at our volume
     )
     return _state["tracer_provider"]
+
+
+@contextmanager
+def traced_run(run_id: str) -> Iterator[None]:
+    """Stamp run_id on every span created within this context (D-04).
+
+    Sets both ``using_session(run_id)`` and ``using_metadata({"run_id":
+    run_id})``. Verified with two real end-to-end runs, not assumed: in
+    isolation (no LangGraph thread_id in play), both ``attributes.session.id``
+    and ``attributes.metadata.run_id`` come back set to run_id. Through the
+    real CLI (a LangGraph checkpointer thread_id is in play),
+    ``attributes.session.id`` is overridden to the conversation's thread_id
+    instead — LangGraph's own instrumentation takes precedence there, which
+    is arguably more useful anyway (it groups a whole conversation thread in
+    Phoenix's UI). ``attributes.metadata.run_id`` reliably carries this
+    run_id regardless, confirmed across 20 real spans from one CLI turn — so
+    AC-08 citations should resolve run_id via ``metadata.run_id``, not
+    ``session.id``.
+
+    A no-op (still yields) when tracing is disabled, so callers don't need to
+    branch on settings.phoenix_enabled."""
+    if not settings.phoenix_enabled:
+        yield
+        return
+    from openinference.instrumentation import using_metadata, using_session
+
+    with using_session(run_id), using_metadata({"run_id": run_id}):
+        yield
 
 
 def flush_tracing() -> None:
