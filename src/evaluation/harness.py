@@ -239,18 +239,55 @@ def _aggregate(results: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+CHECKPOINT_PATH = Path("artifacts_regen/eval_checkpoint.json")
+
+
+def _load_checkpoint(golden_set_path: Path, score: bool) -> dict[str, Any] | None:
+    """Load a resumable checkpoint, but only if it matches this run's config
+    (same dataset content and scoring mode) -- a stale checkpoint from a
+    different golden set or a --no-score run must never be silently reused."""
+    if not CHECKPOINT_PATH.exists():
+        return None
+    try:
+        data = json.loads(CHECKPOINT_PATH.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+    if data.get("dataset_sha256") != _sha256_file(golden_set_path) or data.get("score") != score:
+        return None
+    return data
+
+
+def _write_checkpoint(golden_set_path: Path, score: bool, results: list[dict[str, Any]]) -> None:
+    CHECKPOINT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    CHECKPOINT_PATH.write_text(
+        json.dumps(
+            {"dataset_sha256": _sha256_file(golden_set_path), "score": score, "results": results},
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+
+
 async def run_eval(
     *,
     golden_set_path: Path = GOLDEN_SET_PATH,
     out_path: Path = DEFAULT_OUT_PATH,
     limit: int | None = None,
     score: bool = True,
+    resume: bool = True,
 ) -> dict[str, Any]:
     """Run the golden set through the live graph and (optionally) score it.
 
     score=False skips the DeepEval metric calls entirely (graph-only smoke
     test / faster accuracy-only check) -- useful given each metric call is
     its own Gemini request on top of the graph's own calls.
+
+    Checkpoints to artifacts_regen/eval_checkpoint.json (gitignored, like
+    every other artifacts_regen/ output -- D-06) after every case, so a
+    quota wall or crash partway through loses at most one case's work
+    instead of the whole run. resume=True (default) picks up an existing
+    matching checkpoint instead of starting over; the checkpoint is deleted
+    once the run completes cleanly and the final report is written.
     """
     import time
 
@@ -265,46 +302,65 @@ async def run_eval(
     init_tracing()
 
     cases = load_golden_set(golden_set_path, limit=limit)
-    print(f"eval: {len(cases)} case(s) to run (scoring={'on' if score else 'off'})", flush=True)
-    tools = await _load_tools()
+
+    results: list[dict[str, Any]] = []
+    done_ids: set[str] = set()
+    if resume:
+        checkpoint = _load_checkpoint(golden_set_path, score)
+        if checkpoint:
+            results = checkpoint["results"]
+            done_ids = {r["id"] for r in results}
+            print(f"eval: resuming from checkpoint -- {len(done_ids)} case(s) already done", flush=True)
+
+    remaining = [c for c in cases if c["id"] not in done_ids]
+    print(
+        f"eval: {len(cases)} case(s) total, {len(remaining)} remaining "
+        f"(scoring={'on' if score else 'off'})",
+        flush=True,
+    )
+    if not remaining:
+        tools: list[Any] = []
+    else:
+        tools = await _load_tools()
     worker_llm = get_llm("default")
     judge = GeminiJudge() if score else None
 
-    results: list[dict[str, Any]] = []
-    async with open_checkpointer() as saver, open_memory_store() as mstore:
-        graph = build_graph(
-            supervisor_llm=get_llm("fast"),
-            worker_llm=worker_llm,
-            tools=tools,
-            checkpointer=saver,
-            memory_store=mstore,
-            memory_extractor=build_extractor(worker_llm, mstore),
-        )
-        # Sequential, not gathered: cases run in file order so a
-        # memory_return_visit_session2 case can rely on its session1 case
-        # (earlier in the file) having already saved memory through the same
-        # shared memory_store -- and it keeps Gemini call concurrency low,
-        # which matters given the real per-minute rate limits hit in Phase 4.
-        for i, case in enumerate(cases, 1):
-            reset_call_count()
-            t0 = time.monotonic()
-            r = await _run_case(graph, case)
-            if judge is not None:
-                await _score_case(judge, r)
-            else:
-                r["hallucination_score"] = None
-                r["faithfulness_score"] = None
-                r["answer_relevancy_score"] = None
-            elapsed = time.monotonic() - t0
-            results.append(r)
-            match = "OK" if r["accuracy_match"] else "MISMATCH"
-            print(
-                f"eval: [{i}/{len(cases)}] {case['id']} ({case['category']}) -- "
-                f"{call_count()} calls, {elapsed:.1f}s, expected={case['expected_behavior']} "
-                f"observed={r['observed_behavior']} [{match}]",
-                flush=True,
+    if remaining:
+        async with open_checkpointer() as saver, open_memory_store() as mstore:
+            graph = build_graph(
+                supervisor_llm=get_llm("fast"),
+                worker_llm=worker_llm,
+                tools=tools,
+                checkpointer=saver,
+                memory_store=mstore,
+                memory_extractor=build_extractor(worker_llm, mstore),
             )
-    flush_tracing()
+            # Sequential, not gathered: cases run in file order so a
+            # memory_return_visit_session2 case can rely on its session1 case
+            # (earlier in the file) having already saved memory through the same
+            # shared memory_store -- and it keeps Gemini call concurrency low,
+            # which matters given the real per-minute rate limits hit in Phase 4.
+            for i, case in enumerate(remaining, len(done_ids) + 1):
+                reset_call_count()
+                t0 = time.monotonic()
+                r = await _run_case(graph, case)
+                if judge is not None:
+                    await _score_case(judge, r)
+                else:
+                    r["hallucination_score"] = None
+                    r["faithfulness_score"] = None
+                    r["answer_relevancy_score"] = None
+                elapsed = time.monotonic() - t0
+                results.append(r)
+                _write_checkpoint(golden_set_path, score, results)
+                match = "OK" if r["accuracy_match"] else "MISMATCH"
+                print(
+                    f"eval: [{i}/{len(cases)}] {case['id']} ({case['category']}) -- "
+                    f"{call_count()} calls, {elapsed:.1f}s, expected={case['expected_behavior']} "
+                    f"observed={r['observed_behavior']} [{match}]",
+                    flush=True,
+                )
+        flush_tracing()
 
     report = {
         "metadata": {
