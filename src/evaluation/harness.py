@@ -112,13 +112,21 @@ def _retrieval_context_from_citations(citations: list[dict[str, Any]]) -> list[s
     return texts
 
 
-async def _run_case(graph: Any, case: dict[str, Any]) -> dict[str, Any]:
+async def _run_case(graph: Any, case: dict[str, Any], *, run_nonce: str) -> dict[str, Any]:
     from src.state import new_state
     from src.observability.tracing import traced_run
 
     from src.cli import _invoke_turn  # reuse the recursion-guard degrade path
 
-    thread_id = f"eval-{case['id']}"
+    # run_nonce makes the thread_id unique per harness invocation, not just per
+    # case: data/state/checkpoints.sqlite is a real persistent file (see
+    # open_checkpointer's own docstring, which already documents this exact
+    # leak pattern for reused thread ids across separate runs). Without this,
+    # re-running the same case id in a later process (e.g. resuming after a
+    # crash on a different case, or a completely separate eval invocation)
+    # would silently resume whatever state that thread id had left over from
+    # its last run instead of starting the turn fresh.
+    thread_id = f"eval-{case['id']}-{run_nonce}"
     out: dict[str, Any] = {}
     run_ids: list[str] = []
     for text in case["turns"]:
@@ -330,6 +338,7 @@ async def run_eval(
     once the run completes cleanly and the final report is written.
     """
     import time
+    import uuid
 
     from src.evaluation.gemini_judge import GeminiJudge
     from src.graph import build_graph, open_checkpointer, run_config  # noqa: F401 (run_config unused; thread_id built inline)
@@ -338,6 +347,7 @@ async def run_eval(
     from src.observability.tracing import flush_tracing, init_tracing
     from src.cli import _load_tools
 
+    run_nonce = uuid.uuid4().hex[:8]
     settings.require_api_key()
     init_tracing()
 
@@ -383,7 +393,7 @@ async def run_eval(
             for i, case in enumerate(remaining, len(done_ids) + 1):
                 reset_call_count()
                 t0 = time.monotonic()
-                r = await _run_case(graph, case)
+                r = await _run_case(graph, case, run_nonce=run_nonce)
                 if judge is not None:
                     await _score_case(judge, r)
                 else:
