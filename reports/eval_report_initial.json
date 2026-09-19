@@ -1,9 +1,9 @@
 {
   "metadata": {
-    "timestamp": "2026-09-19T21:29:03.120686+00:00",
-    "git_commit": "b73b5274258f09bc51a4050c17810970b4f248d7",
+    "timestamp": "2026-09-19T21:50:45.218084+00:00",
+    "git_commit": "95ac1c249f519da70af00a2a325d302f6761b0ca",
     "dataset_path": "data\\golden_set\\golden.jsonl",
-    "dataset_sha256": "74c0a7d0e7eed6c9fd56992030bf17fb06bb7894ee8a0f302a9e547f0794d20a",
+    "dataset_sha256": "13bdffe07757f1adc367a7d7b0129b5de562dcb74cc450a43b0dcd75dc412c7b",
     "worker_model": "gemini-3.1-flash-lite",
     "judge_model": "gemini-3.1-flash-lite",
     "scored": true,
@@ -15,10 +15,10 @@
     }
   },
   "metrics": {
-    "accuracy": 0.65,
+    "accuracy": 0.6,
     "hallucination_rate": 0.0,
-    "faithfulness_mean": 0.9870129870129871,
-    "answer_relevancy_mean": 0.8523809523809524,
+    "faithfulness_mean": 0.9820827320827321,
+    "answer_relevancy_mean": 0.7415873015873016,
     "pass_rate_by_category": {
       "account_balance": 1.0,
       "account_transactions": 0.3333333333333333,
@@ -26,10 +26,12 @@
       "dispute_intake": 1.0,
       "dispute_eligibility": 0.0,
       "dispute_status": 0.0,
-      "policy_question": 0.5714285714285714
+      "policy_question": 0.5,
+      "abstention": 0.6666666666666666,
+      "ambiguous": 0.5
     },
-    "case_count": 20,
-    "scored_for_hallucination_faithfulness": 18
+    "case_count": 30,
+    "scored_for_hallucination_faithfulness": 27
   },
   "results": [
     {
@@ -600,6 +602,285 @@
       "answer_relevancy_reason": "The score is 0.00 because the response failed to provide any actionable instructions for obtaining an old statement, instead focusing on irrelevant requirements and subjective commentary.",
       "hallucination_score": null,
       "faithfulness_score": null
+    },
+    {
+      "id": "g-pol-008",
+      "category": "policy_question",
+      "customer_id": "C0002",
+      "input": "How do I file a complaint about my account?",
+      "actual_output": "This request needs a human banking agent. I've noted your request and a human agent will follow up. Is there anything else I can help you with in the meantime?",
+      "context": [
+        "This request needs a human banking agent. I've noted your request and a human agent will follow up. Is there anything else I can help you with in the meantime?"
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "escalate",
+      "accuracy_match": false,
+      "run_ids": [
+        "run-8de05c1e-f4db-4e92-ac1c-c33df6b6704d"
+      ],
+      "tags": [
+        "AC-03",
+        "policy",
+        "complaints"
+      ],
+      "answer_relevancy_score": 0.0,
+      "answer_relevancy_reason": "The score is 0.00 because the output consists entirely of conversational filler and procedural descriptions rather than providing the actual steps required to file an account complaint.",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 0.75,
+      "faithfulness_reason": "The score is 0.75 because the actual output incorrectly attributes the phrase 'in the meantime' to the system's closing inquiry, which is not supported by the provided retrieval context."
+    },
+    {
+      "id": "g-pol-009",
+      "category": "policy_question",
+      "customer_id": "C0001",
+      "input": "What's the difference between a checking and savings account?",
+      "actual_output": "Savings accounts earn variable monthly interest, allow up to 6 withdrawals/transfers per cycle, and have no maintenance fee. Standard checking accounts support unlimited transactions, include a debit card and overdraft protection, and have a $5.00 monthly fee, which is waived with an average daily balance of $1,500+ or a recurring direct deposit of $500+.",
+      "context": [
+        "Savings accounts earn variable monthly interest, allow up to 6 withdrawals/transfers per cycle, and have no maintenance fee. Standard checking accounts support unlimited transactions, include a debit card and overdraft protection, and have a $5.00 monthly fee, which is waived with an average daily balance of $1,500+ or a recurring direct deposit of $500+."
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "answer",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-3ef01cec-8044-4777-b595-e04c45ceb727"
+      ],
+      "tags": [
+        "AC-03",
+        "policy",
+        "account-types"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response provides a clear, accurate, and perfectly relevant explanation of the differences between checking and savings accounts!",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-pol-010",
+      "category": "policy_question",
+      "customer_id": "C0002",
+      "input": "What documents do I need for identity verification?",
+      "actual_output": "I don't have information about that in our policy documentation, so I don't want to guess. I can connect you with a servicing agent who can help, or you can ask about fees, disputes, transfers, cards, statements, account types or KYC.",
+      "context": [
+        "I don't have information about that in our policy documentation, so I don't want to guess. I can connect you with a servicing agent who can help, or you can ask about fees, disputes, transfers, cards, statements, account types or KYC."
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "abstain",
+      "accuracy_match": false,
+      "run_ids": [
+        "run-d29a72a5-0b67-4fb3-b9f1-6a62aa42c200"
+      ],
+      "tags": [
+        "AC-03",
+        "policy",
+        "kyc"
+      ],
+      "answer_relevancy_score": 0.2,
+      "answer_relevancy_reason": "The score is 0.20 because the response failed to address the specific question about identity verification documents and instead provided a list of irrelevant topics like fees, disputes, and account types.",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-pol-011",
+      "category": "policy_question",
+      "customer_id": "C0001",
+      "input": "Can I manage my account entirely through the mobile app?",
+      "actual_output": "I don't have information about that in our policy documentation, so I don't want to guess. I can connect you with a servicing agent who can help, or you can ask about fees, disputes, transfers, cards, statements, account types or KYC.",
+      "context": [
+        "I don't have information about that in our policy documentation, so I don't want to guess. I can connect you with a servicing agent who can help, or you can ask about fees, disputes, transfers, cards, statements, account types or KYC."
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "abstain",
+      "accuracy_match": false,
+      "run_ids": [
+        "run-a38a7c07-12de-443d-8889-14396871b480"
+      ],
+      "tags": [
+        "AC-03",
+        "policy",
+        "digital"
+      ],
+      "answer_relevancy_score": 0.3,
+      "answer_relevancy_reason": "The score is 0.30 because the response includes significant amounts of irrelevant information that does not address the user's specific question about mobile app account management capabilities.",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-pol-012",
+      "category": "policy_question",
+      "customer_id": "C0002",
+      "input": "What happens to my account if I want to close it?",
+      "actual_output": "To close your account, the following conditions and procedures apply:\n\n*   **Requesting Closure:** You may request to close your account at any time through servicing [POL-ACCOUNT-CLOSURE §Requesting Closure].\n*   **Account Balance:** Your account must have a zero or positive balance. If there is a positive balance, it will be refunded to your on-file payment method or sent via a mailed check within 10 business days of the closure [POL-ACCOUNT-CLOSURE §Requesting Closure].\n*   **Joint Accounts:** If you have a joint account, you must obtain consent from all account owners to close it, or provide a court order if there is a dispute between owners [POL-ACCOUNT-CLOSURE §Joint Account Closure].\n*   **Pending Items:** You cannot close an account if it has open disputes or pending transactions. These must be resolved or fully posted before closure to ensure transaction history is preserved for investigations [POL-ACCOUNT-CLOSURE §Open Disputes or Pending Transactions].\n\nThe provided passages do not specify the exact method of \"servicing\" (e.g., phone, online, or in-person) required to initiate the request.",
+      "context": [
+        "To close your account, the following conditions and procedures apply:\n\n*   **Requesting Closure:** You may request to close your account at any time through servicing [POL-ACCOUNT-CLOSURE §Requesting Closure].\n*   **Account Balance:** Your account must have a zero or positive balance. If there is a positive balance, it will be refunded to your on-file payment method or sent via a mailed check within 10 business days of the closure [POL-ACCOUNT-CLOSURE §Requesting Closure].\n*   **Joint Accounts:** If you have a joint account, you must obtain consent from all account owners to close it, or provide a court order if there is a dispute between owners [POL-ACCOUNT-CLOSURE §Joint Account Closure].\n*   **Pending Items:** You cannot close an account if it has open disputes or pending transactions. These must be resolved or fully posted before closure to ensure transaction history is preserved for investigations [POL-ACCOUNT-CLOSURE §Open Disputes or Pending Transactions].\n\nThe provided passages do not specify the exact method of \"servicing\" (e.g., phone, online, or in-person) required to initiate the request."
+      ],
+      "retrieval_context": [
+        "[POL-ACCOUNT-CLOSURE §Requesting Closure] Account Closure Policy — Requesting Closure\n\nA customer may request account closure at any time through servicing. The\naccount must have a zero or positive balance; any positive balance is\nrefunded via the customer's on-file payment method or a mailed check within\n10 business days of closure.",
+        "[POL-ACCOUNT-CLOSURE §Joint Account Closure] Account Closure Policy — Joint Account Closure\n\nClosing a joint account requires consent from all owners, or a court order\nin the case of a dispute between owners.",
+        "[POL-ACCOUNT-CLOSURE §Open Disputes or Pending Transactions] Account Closure Policy — Open Disputes or Pending Transactions\n\nAn account with an open dispute or pending transactions cannot be closed\nuntil those items are resolved or fully posted, to avoid losing the\ntransaction history needed for investigation."
+      ],
+      "expected_behavior": "answer",
+      "observed_behavior": "answer",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-014c03a4-ad01-4f6b-86cc-e548e640922e"
+      ],
+      "tags": [
+        "AC-03",
+        "policy",
+        "closure"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response is perfectly relevant and directly addresses the user's inquiry about account closure with clarity and precision.",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context, accurately reflecting all policies regarding account closure, joint account requirements, and the handling of pending transactions or disputes.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-abs-001",
+      "category": "abstention",
+      "customer_id": "C0001",
+      "input": "What is your current mortgage interest rate?",
+      "actual_output": "I don't have information about that in our policy documentation, so I don't want to guess. I can connect you with a servicing agent who can help, or you can ask about fees, disputes, transfers, cards, statements, account types or KYC.",
+      "context": [
+        "I don't have information about that in our policy documentation, so I don't want to guess. I can connect you with a servicing agent who can help, or you can ask about fees, disputes, transfers, cards, statements, account types or KYC."
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "abstain",
+      "observed_behavior": "abstain",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-8be8310a-bc6e-481d-b034-e6d7d550811d"
+      ],
+      "tags": [
+        "AC-03",
+        "abstain"
+      ],
+      "answer_relevancy_score": 0.3,
+      "answer_relevancy_reason": "The score is 0.30 because the response included extensive irrelevant information regarding fees, disputes, transfers, cards, account types, and KYC, failing to address the specific question about mortgage interest rates.",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-abs-002",
+      "category": "abstention",
+      "customer_id": "C0002",
+      "input": "Can I buy cryptocurrency through this bank?",
+      "actual_output": "No, you cannot buy cryptocurrency through this bank. The bank does not offer cryptocurrency wallets [POL-ACCOUNT-TYPES §Account Types Not Offered].",
+      "context": [
+        "No, you cannot buy cryptocurrency through this bank. The bank does not offer cryptocurrency wallets [POL-ACCOUNT-TYPES §Account Types Not Offered]."
+      ],
+      "retrieval_context": [
+        "[POL-ACCOUNT-TYPES §Account Types Not Offered] Account Types Policy — Account Types Not Offered\n\nThis bank does not offer mortgage accounts, brokerage/investment accounts, or\ncryptocurrency wallets; customers asking about these should be told this\nservice is not available here rather than given financial guidance about\nthose products.",
+        "[POL-DIGITAL-BANKING §Digital Wallet Support] Mobile and Online Banking Access Policy — Digital Wallet Support\n\nCards can be added to supported digital wallets immediately upon activation,\nincluding a newly issued replacement card, without waiting for the physical\ncard to arrive.",
+        "[POL-DIGITAL-BANKING §Login Security] Mobile and Online Banking Access Policy — Login Security\n\nMobile and online banking require multi-factor authentication (password plus\na one-time code) on any new device. A device is remembered for 30 days\nbefore re-verification is required again."
+      ],
+      "expected_behavior": "abstain",
+      "observed_behavior": "answer",
+      "accuracy_match": false,
+      "run_ids": [
+        "run-616e9df2-1573-4701-be58-d8b791684cee"
+      ],
+      "tags": [
+        "AC-03",
+        "abstain"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response is perfectly relevant and directly addresses the user's inquiry with clarity and precision. Great job!",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is entirely consistent with the provided policy and contains no factual contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-abs-003",
+      "category": "abstention",
+      "customer_id": "C0001",
+      "input": "What investment funds do you offer for retirement savings?",
+      "actual_output": "I don't have information about that in our policy documentation, so I don't want to guess. I can connect you with a servicing agent who can help, or you can ask about fees, disputes, transfers, cards, statements, account types or KYC.",
+      "context": [
+        "I don't have information about that in our policy documentation, so I don't want to guess. I can connect you with a servicing agent who can help, or you can ask about fees, disputes, transfers, cards, statements, account types or KYC."
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "abstain",
+      "observed_behavior": "abstain",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-7dcc953a-07f7-4b61-8678-51dcde6966ac"
+      ],
+      "tags": [
+        "AC-03",
+        "abstain"
+      ],
+      "answer_relevancy_score": 0.4,
+      "answer_relevancy_reason": "The score is 0.40 because the response included several irrelevant inquiries regarding fees, disputes, transfers, cards, statements, and KYC, which distracted from the specific question about retirement investment funds.",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-amb-001",
+      "category": "ambiguous",
+      "customer_id": "C0001",
+      "input": "I need help with something.",
+      "actual_output": "This request needs a human banking agent — it took too many steps to resolve automatically.",
+      "context": null,
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "escalate",
+      "accuracy_match": false,
+      "run_ids": [
+        "run-9e97c1f1-d403-4dd4-b526-b76588932628"
+      ],
+      "tags": [
+        "AC-04",
+        "ambiguous"
+      ],
+      "answer_relevancy_score": 0.0,
+      "answer_relevancy_reason": "The score is 0.00 because the response provided irrelevant information regarding banking and automated processes that were never mentioned or requested in the input.",
+      "hallucination_score": null,
+      "faithfulness_score": null
+    },
+    {
+      "id": "g-amb-002",
+      "category": "ambiguous",
+      "customer_id": "C0002",
+      "input": "Something's wrong with my account.",
+      "actual_output": "I'm sorry to hear that. To help you best, could you clarify if you are seeing an unexpected transaction, have a question about a fee, or need help with something else like a balance or service request?",
+      "context": [
+        "I'm sorry to hear that. To help you best, could you clarify if you are seeing an unexpected transaction, have a question about a fee, or need help with something else like a balance or service request?"
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "answer",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-25c24cb4-deb3-4fab-a12f-3705ed3160dd"
+      ],
+      "tags": [
+        "AC-04",
+        "ambiguous"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response is perfectly relevant and addresses the user's concern with a helpful and encouraging tone!",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
     }
   ]
 }
