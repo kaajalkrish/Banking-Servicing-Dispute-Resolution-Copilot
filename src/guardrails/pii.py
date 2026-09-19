@@ -44,9 +44,16 @@ def get_anonymizer() -> AnonymizerEngine:
     return AnonymizerEngine()
 
 
+def analyze(text: str, *, language: str = "en") -> list[Any]:
+    """Raw Presidio RecognizerResult objects, for callers that need to filter
+    before anonymizing (e.g. output.py excluding the authenticated customer's
+    own id from masking, while still masking a different customer's id)."""
+    return get_analyzer().analyze(text=text, language=language)
+
+
 def detect_pii(text: str, *, language: str = "en") -> list[dict[str, Any]]:
     """Return Presidio's detections as plain dicts."""
-    results = get_analyzer().analyze(text=text, language=language)
+    results = analyze(text, language=language)
     return [
         {"entity_type": r.entity_type, "start": r.start, "end": r.end, "score": r.score}
         for r in results
