@@ -26,7 +26,6 @@ from pydantic import BaseModel
 from src.agents._common import get_tool, latest_user_text, memory_context_block, record_result
 from src.context.isolate import isolate_for_worker
 from src.llm import ainvoke_with_backoff
-from src.tools.resilience import resilient_ainvoke
 
 MEMORY_ANSWER_SYSTEM = (
     "Using ONLY the customer context provided (not general knowledge), decide "
@@ -61,9 +60,10 @@ async def product_info_node(state: dict[str, Any], *, tools: list[Any], llm: Any
             state, "product_info", "That capability is unavailable right now.", requires_human_review=True
         )
 
-    result = await resilient_ainvoke(tool, {"query": text}, tool_name="policy_search")
+    # tool is already resilient + logged (P3-07 registry) — just invoke.
+    result = await tool.ainvoke({"query": text})
     if isinstance(result, dict) and result.get("ok") is False:
-        # resilient_ainvoke's own timeout/error failure shape
+        # the ResilientTool wrapper's own timeout/error failure shape
         return record_result(
             state, "product_info", "I couldn't look that up right now. Let me connect you to an agent.",
             requires_human_review=True,

@@ -11,7 +11,6 @@ from typing import Any
 
 from src.agents._common import compose_answer, get_tool, latest_user_text, memory_context_block, record_result
 from src.context.isolate import isolate_for_worker
-from src.tools.resilience import resilient_ainvoke
 
 SYSTEM = (
     "You are a retail-bank account servicing assistant. Answer only from the tool "
@@ -78,7 +77,8 @@ async def account_servicing_node(
         if iso.get("account_ref"):
             args["account_ref"] = iso["account_ref"]
 
-    result = await resilient_ainvoke(tool, args, tool_name=tool_name)
+    # tools are already resilient + logged (P3-07 registry) — just invoke.
+    result = await tool.ainvoke(args)
     answer = await compose_answer(
         llm,
         SYSTEM,

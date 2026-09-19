@@ -30,6 +30,7 @@ from src.context.select import select_context
 from src.context.summarization import maybe_summarize
 from src.schemas import FinalAnswer
 from src.state import CopilotState
+from src.tools.registry import build_tools
 
 _WORKER_NODES = {
     "intake": intake_node,
@@ -127,7 +128,10 @@ def build_graph(
 
     g.add_node("supervisor", partial(supervisor_node, llm=supervisor_llm))
     for name, fn in _WORKER_NODES.items():
-        g.add_node(name, partial(fn, tools=tools, llm=worker_llm))
+        # Every tool is routed through the registry (resilience + logging,
+        # P3-07) tagged with this worker's name — no tool call can bypass
+        # logs/tool_calls.jsonl by going around it.
+        g.add_node(name, partial(fn, tools=build_tools(name, tools), llm=worker_llm))
     g.add_node("escalate_human", escalate_node)
     g.add_node("finalize", finalize_node)
 
