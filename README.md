@@ -6,9 +6,9 @@ account-servicing, dispute, product-info) over a custom MCP server, grounded in
 policy and instrumented for observability, cost governance, security, compliance
 and evaluation. **Gemini is the only model provider. No Docker, no external DB.**
 
-> Status: **Phase 2 complete** (Phase 1 foundation + agentic RAG over a policy
-> corpus, context engineering, and tiered short/long-term memory). Later
-> phases fill in the sections marked _(coming)_.
+> Status: **Phase 3 complete** (Phases 1-2 foundation + Arize Phoenix
+> observability: tracing, tool-invocation log, trace export). Later phases
+> fill in the sections marked _(coming)_.
 
 ## Prerequisites
 
@@ -37,9 +37,13 @@ Optional overrides (safe defaults applied otherwise): `GEMINI_MODEL`
 `STATE_DIR`, `MAX_STEPS`, `RECURSION_LIMIT`. See `.env.example`.
 
 > **Gemini free-tier quota note:** the flash-tier model is capped at 20
-> requests/day per project on the free tier. Prefer `GEMINI_MODEL_FAST`
-> (flash-lite, a separate quota) for routing/cheap calls and for local testing
-> where possible; batch live verifications together rather than one-off runs.
+> requests/day per project; flash-lite has its own separate daily quota **and**
+> a 15-requests/minute cap. A single conversation turn can make several real
+> calls (routing, worker composition, RAG grading/answer, memory extraction),
+> so a full batch over many conversations can burst past 15/min — the retry
+> wrapper (`src/llm.py`) backs off and recovers, but budget real wall-clock
+> time for a full `regenerate` run. Prefer `GEMINI_MODEL_FAST` for routing/
+> cheap calls and local testing; batch live verifications together.
 
 ## Generate synthetic data
 
@@ -102,15 +106,61 @@ pytest -q -m live           # tests that call real Gemini (need GOOGLE_API_KEY)
   `data/sample_inputs/conversations.jsonl` (`conv-return-visit-session1` then
   `conv-return-visit-session2`).
 
+## Observability (Phase 3)
+
+Every `chat`/`run`/`mcp-demo`/`regenerate` invocation calls Phoenix tracing on
+the run path (not just imports it). Start the app yourself to watch live:
+
+```bash
+python -m src.cli chat --customer-id C0001 --message "What is my balance?"
+# then open http://localhost:6006 in a browser
+```
+
+- **Working directory:** `.phoenix/` at the repo root (gitignored), so traces
+  persist across separate process runs — a later `export`/`regenerate` can
+  read spans written by an earlier, already-exited process.
+- **`run_id`:** a UUID minted once per turn (`src/common/ids.py`), stamped as
+  `attributes.metadata.run_id` on every span in that turn (and as
+  `attributes.session.id` when no LangGraph thread is in play — inside a real
+  conversation thread, LangGraph's own instrumentation sets `session.id` to
+  the thread id instead, which usefully groups a whole conversation in the
+  Phoenix UI). **Cite `metadata.run_id`, not `session.id`, for a failure
+  citation** — verified against real captured spans, not assumed.
+- **Span-type mapping** (`src/observability/span_types.py`, for golden
+  signals in Phase 5): `LLM` → thinking; `TOOL`/`RETRIEVER` → tool; everything
+  else (`CHAIN`, `AGENT`) → acting. Verified against real spans from two live
+  runs, not generic conventions.
+- **`export`:** `python -m src.cli export [--project NAME] [--parquet PATH] [--csv PATH]`
+  — reads spans from `.phoenix/` (relaunching the local app if needed) and
+  writes parquet/CSV, JSON-stringifying any dict-valued column first (parquet
+  can't store a dict in a cell).
+- **`regenerate`:** `python -m src.cli regenerate --traces [--inputs PATH] [--commit-evidence] [--keep-ui]`
+  re-runs the sample conversations and exports spans. **Evidence policy
+  (D-06):** by default everything goes to gitignored `artifacts_regen/`
+  (`traces/`, `logs/`) so experiments never touch committed evidence;
+  `--commit-evidence` redirects to the real `traces/` and `logs/` paths
+  instead. `--keep-ui` leaves the process (and the local Phoenix server)
+  running afterwards for a dashboard screenshot (Phase 5).
+- **Verify:** `python scripts/verify_tool_names.py` (logged tool names
+  reconcile with the code) and `python scripts/verify_trace_export.py`
+  (multi-agent + tool-call coverage, latencies, run_id all present in a
+  committed export).
+
 ## Logs & evidence
 
+- `logs/tool_calls.jsonl` — every tool call, resilience+logging-wrapped
+  (`src/tools/registry.py`): timestamp, run_id, agent, tool_name, args,
+  result, latency_ms, status.
 - `logs/mcp_transcript.jsonl` — every MCP tool call + resource read (masked).
 - `logs/memory_test.log` — cross-session memory recall proof (masked; from a
   real Gemini + LangMem run — see above).
+- `traces/phoenix_spans.parquet` — a full traced run's spans (§7.2 Trace export).
 - Account and card numbers are always masked (`src/common/masking.py`); no PAN
   is ever written in plaintext.
-- Tests write logs/state to a temp directory by default, so the committed
-  `logs/` holds only real, machine-generated evidence.
+- Tests write logs/state to a temp directory by default (Phoenix tracing is
+  also disabled by default in tests — `PHOENIX_ENABLED=false`, set in
+  `tests/conftest.py`), so the committed `logs/`/`traces/` hold only real,
+  machine-generated evidence.
 
 ## Architecture
 
@@ -132,12 +182,11 @@ step/recursion guard stops runaway loops.
 
 ## Coming in later phases
 
-- _Observability_ — Arize Phoenix tracing, tool-invocation log, trace export _(Phase 3)_
 - _Security_ — input/output guardrails, audit trail, Presidio PII, red-team _(Phase 4)_
 - _Evaluation & cost_ — DeepEval (Gemini judge), golden signals, dashboard _(Phase 5)_
 - _Governance_ — risk register, model card, compliance mapping, output-risk _(Phase 6)_
 - _Bonus_ — FastAPI streaming endpoint _(Phase 6)_
-- _Regenerate traces + evaluation_ with a single command _(Phase 3/5)_
+- _Regenerate evaluation_ added to the `regenerate` command _(Phase 5)_
 
 ## Scope
 
