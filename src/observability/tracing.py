@@ -80,15 +80,19 @@ def traced_run(run_id: str) -> Iterator[None]:
     AC-08 citations should resolve run_id via ``metadata.run_id``, not
     ``session.id``.
 
-    A no-op (still yields) when tracing is disabled, so callers don't need to
-    branch on settings.phoenix_enabled."""
-    if not settings.phoenix_enabled:
-        yield
-        return
-    from openinference.instrumentation import using_metadata, using_session
+    Also binds run_id to src.common.ids.get_current_run_id() (via bind_run_id)
+    regardless of whether tracing is enabled, so tool_calls.jsonl still gets a
+    real run_id even with PHOENIX_ENABLED=false."""
+    from src.common.ids import bind_run_id
 
-    with using_session(run_id), using_metadata({"run_id": run_id}):
-        yield
+    with bind_run_id(run_id):
+        if not settings.phoenix_enabled:
+            yield
+            return
+        from openinference.instrumentation import using_metadata, using_session
+
+        with using_session(run_id), using_metadata({"run_id": run_id}):
+            yield
 
 
 def flush_tracing() -> None:
