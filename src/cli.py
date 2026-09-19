@@ -4,9 +4,12 @@ Commands:
   chat     --customer-id C0001 [--thread-id T] [--message "..."]
   run      --inputs data/sample_inputs/conversations.jsonl
   mcp-demo                       exercise the MCP tools (no LLM) -> transcript
+  regenerate --traces [--commit-evidence] [--keep-ui]
+  export   [--project P] [--parquet PATH] [--csv PATH]
+  redteam                        run the red-team attack set -> reports/redteam_results.json
 
-Output is masked; the process exits non-zero on failure. Later phases add
-`export`, `regenerate`, `eval` and `redteam` subcommands.
+Output is masked; the process exits non-zero on failure. A later phase adds
+an `eval` subcommand.
 """
 
 from __future__ import annotations
@@ -269,6 +272,41 @@ async def cmd_export(args: argparse.Namespace) -> int:
     return 0
 
 
+async def cmd_redteam(_args: argparse.Namespace) -> int:
+    """Run the red-team attack set for real and write the results (§8.1).
+    Delegates to scripts/run_redteam.py's run_all()/write_markdown_report() so
+    there is exactly one implementation for both entry points (this awaits
+    run_all() directly rather than calling that script's main(), which wraps
+    it in its own asyncio.run() -- calling that here would fail since this
+    coroutine is already running inside main()'s own event loop)."""
+    import json
+
+    from scripts.run_redteam import run_all, write_markdown_report
+
+    summary = await run_all()
+
+    reports_dir = Path("reports")
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    (reports_dir / "redteam_results.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+
+    docs_dir = Path("docs")
+    docs_dir.mkdir(parents=True, exist_ok=True)
+    write_markdown_report(summary, docs_dir / "redteam-results.md")
+
+    _print(
+        f"red-team: {summary['counted_passed']}/{summary['total_attacks']} passed "
+        f"({summary['known_gaps']} documented known gaps)"
+    )
+    if not summary["ok"]:
+        _print("UNDOCUMENTED FAILURES:")
+        for r in summary["results"]:
+            if not r["counted_pass"]:
+                _print(f"  - {r['id']} ({r['category']})")
+        return 1
+    _print("OK: every attack either passed or is a documented known gap.")
+    return 0
+
+
 async def _load_tools() -> list[Any]:
     from src.llm import get_llm
     from src.mcp_client import get_mcp_tools
@@ -312,6 +350,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     d = sub.add_parser("mcp-demo", help="exercise the MCP tools and write the transcript")
     d.set_defaults(func=cmd_mcp_demo)
+
+    rt = sub.add_parser("redteam", help="run the red-team attack set and write results")
+    rt.set_defaults(func=cmd_redteam)
 
     return p
 
