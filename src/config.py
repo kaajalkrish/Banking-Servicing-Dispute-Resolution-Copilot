@@ -64,7 +64,15 @@ class Settings:
     # --- Resilience / graph limits (NFR-04) ---
     request_timeout_s: float = field(default_factory=lambda: float(_get("REQUEST_TIMEOUT_S", "30")))
     max_retries: int = field(default_factory=lambda: _get_int("MAX_RETRIES", 3))
-    recursion_limit: int = field(default_factory=lambda: _get_int("RECURSION_LIMIT", 25))
+    # recursion_limit is LangGraph's own HARD ceiling (raises GraphRecursionError,
+    # not caught by our step guard); max_steps is OUR soft guard, checked once per
+    # supervisor visit. A real live run hit the hard ceiling before the soft guard
+    # fired: each supervisor<->worker cycle our step_count counts as ONE step is
+    # actually 2 graph hops, plus load_memory/build_context/save_memory add 3 more
+    # one-time hops per turn (P2-12) -- the original 25/12 pairing left too thin a
+    # margin (worst case ~2*12+5=29 hops > 25). recursion_limit is now generously
+    # larger than max_steps' worst case so our own guard always fires first.
+    recursion_limit: int = field(default_factory=lambda: _get_int("RECURSION_LIMIT", 60))
     max_steps: int = field(default_factory=lambda: _get_int("MAX_STEPS", 12))
 
     # --- Observability (wired in Phase 3; placeholders here) ---

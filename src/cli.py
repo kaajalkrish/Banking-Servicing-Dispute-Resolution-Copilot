@@ -81,6 +81,31 @@ async def _answer_for(out: dict[str, Any]) -> str:
     return ans
 
 
+async def _invoke_turn(graph: Any, state: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
+    """Invoke the graph for one turn, degrading gracefully (NFR-04) if
+    LangGraph's hard recursion_limit is ever hit. Our own step_count guard
+    (src/agents/supervisor.py) is sized to fire well before this — a real live
+    run hit it anyway (see notes/failures.local.md), so this is a direct,
+    observed-necessary safety net: one bad turn escalates instead of crashing
+    the whole process (and, in a batch run, the rest of the conversations)."""
+    from langgraph.errors import GraphRecursionError
+
+    try:
+        return await graph.ainvoke(state, config)
+    except GraphRecursionError:
+        return {
+            "final_answer": {
+                "answer": (
+                    "This request needs a human banking agent — it took too many "
+                    "steps to resolve automatically."
+                ),
+                "requires_human_review": True,
+                "risk_tier": "high",
+                "escalated": True,
+            }
+        }
+
+
 async def cmd_chat(args: argparse.Namespace) -> int:
     from src.common.ids import new_run_id
     from src.graph import build_graph, open_checkpointer, run_config
@@ -110,7 +135,8 @@ async def cmd_chat(args: argparse.Namespace) -> int:
             # later failure citation to point at exactly which turn failed.
             run_id = new_run_id()
             with traced_run(run_id):
-                out = await graph.ainvoke(
+                out = await _invoke_turn(
+                    graph,
                     new_state(args.customer_id, text, max_steps=settings.max_steps),
                     run_config(thread_id),
                 )
@@ -170,7 +196,8 @@ async def cmd_run(args: argparse.Namespace) -> int:
                 _print(f"you> {text}")
                 run_id = new_run_id()
                 with traced_run(run_id):
-                    out = await graph.ainvoke(
+                    out = await _invoke_turn(
+                        graph,
                         new_state(cid, text, max_steps=settings.max_steps),
                         run_config(thread_id),
                     )
