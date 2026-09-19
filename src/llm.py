@@ -50,7 +50,17 @@ _TRANSIENT_MARKERS = (
     "deadline",
     "rate limit",
     "overloaded",
+    "timeout",
+    "timed out",
 )
+
+# Exception type names to treat as transient even when str(exc) is empty --
+# a real, observed failure: asyncio/httpx TimeoutError instances frequently
+# carry no message at all, so a pure substring check on str(exc) silently
+# missed every one of them and let a timeout crash the whole run instead of
+# retrying (found live during a 20-case eval run; see harness.py's commit
+# history / notes/failures.local.md for the exact incident).
+_TRANSIENT_EXCEPTION_TYPES = ("TimeoutError", "ConnectionError", "ConnectTimeout", "ReadTimeout")
 
 
 def get_llm(
@@ -76,6 +86,8 @@ def get_llm(
 
 
 def _is_transient(exc: Exception) -> bool:
+    if type(exc).__name__ in _TRANSIENT_EXCEPTION_TYPES:
+        return True
     msg = str(exc).lower()
     return any(marker in msg for marker in _TRANSIENT_MARKERS)
 
