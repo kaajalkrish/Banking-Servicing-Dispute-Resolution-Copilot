@@ -4,12 +4,12 @@ Commands:
   chat     --customer-id C0001 [--thread-id T] [--message "..."]
   run      --inputs data/sample_inputs/conversations.jsonl
   mcp-demo                       exercise the MCP tools (no LLM) -> transcript
-  regenerate --traces [--commit-evidence] [--keep-ui]
+  regenerate [--traces] [--eval] [--limit N] [--commit-evidence] [--keep-ui]
+  eval     [--out PATH] [--limit N] [--no-score]  run the golden set through DeepEval
   export   [--project P] [--parquet PATH] [--csv PATH]
   redteam                        run the red-team attack set -> reports/redteam_results.json
 
-Output is masked; the process exits non-zero on failure. A later phase adds
-an `eval` subcommand.
+Output is masked; the process exits non-zero on failure.
 """
 
 from __future__ import annotations
@@ -219,8 +219,8 @@ async def cmd_regenerate(args: argparse.Namespace) -> int:
 
     from src.observability.export import export_project
 
-    if not args.traces:
-        _print("regenerate: pass --traces to regenerate the trace export (eval is added in Phase 5)")
+    if not args.traces and not args.eval:
+        _print("regenerate: pass --traces and/or --eval")
         return 1
 
     inputs_path = args.inputs or "data/sample_inputs/conversations.jsonl"
@@ -228,20 +228,29 @@ async def cmd_regenerate(args: argparse.Namespace) -> int:
     if args.commit_evidence:
         log_dir = Path("logs")
         parquet_path = Path("traces/phoenix_spans.parquet")
+        eval_out_path = Path("reports/eval_report.json")
     else:
         out_dir = Path("artifacts_regen")
         log_dir = out_dir / "logs"
         parquet_path = out_dir / "traces" / "phoenix_spans.parquet"
+        eval_out_path = out_dir / "reports" / "eval_report.json"
     log_dir.mkdir(parents=True, exist_ok=True)
     os.environ["LOG_DIR"] = str(log_dir)  # picked up by mcp transcript + tool logging (read fresh, not cached)
 
-    exit_code = await cmd_run(argparse.Namespace(inputs=inputs_path))
-    if exit_code != 0:
-        return exit_code
+    if args.traces:
+        exit_code = await cmd_run(argparse.Namespace(inputs=inputs_path))
+        if exit_code != 0:
+            return exit_code
 
-    df = export_project(settings.phoenix_project, parquet_path=parquet_path)
-    _print(f"regenerate: exported {len(df)} spans -> {parquet_path}")
-    _print(f"regenerate: logs written under {log_dir}/")
+        df = export_project(settings.phoenix_project, parquet_path=parquet_path)
+        _print(f"regenerate: exported {len(df)} spans -> {parquet_path}")
+        _print(f"regenerate: logs written under {log_dir}/")
+
+    if args.eval:
+        from src.evaluation.harness import run_eval
+
+        report = await run_eval(out_path=eval_out_path, limit=args.limit)
+        _print(f"regenerate: eval report -> {eval_out_path} ({json.dumps(report['metrics'])})")
 
     if args.keep_ui:
         _print("Phoenix UI running at http://localhost:6006 -- press Ctrl+C to stop.")
@@ -251,6 +260,25 @@ async def cmd_regenerate(args: argparse.Namespace) -> int:
         except KeyboardInterrupt:
             pass
 
+    return 0
+
+
+async def cmd_eval(args: argparse.Namespace) -> int:
+    """Run the golden set through the live graph and score it with DeepEval
+    (AC-12, §7.6). --limit runs a smoke subset instead of the full golden
+    set (§10.6 risk: Gemini rate limits on a 47-case x 3-metric run) and
+    --no-score skips the DeepEval metric calls entirely (graph-only, faster,
+    still produces accuracy)."""
+    from src.evaluation.harness import run_eval
+
+    out_path = Path(args.out) if args.out else None
+    report = await run_eval(
+        out_path=out_path or Path("reports/eval_report.json"),
+        limit=args.limit,
+        score=not args.no_score,
+    )
+    _print(f"eval: {report['metrics']['case_count']} cases -> {out_path or 'reports/eval_report.json'}")
+    _print(json.dumps(report["metrics"], indent=2))
     return 0
 
 
@@ -333,14 +361,22 @@ def build_parser() -> argparse.ArgumentParser:
     r.set_defaults(func=cmd_run)
 
     g = sub.add_parser("regenerate", help="regenerate committed evidence from sample conversations")
-    g.add_argument("--traces", action="store_true", help="regenerate the trace export (required for now)")
+    g.add_argument("--traces", action="store_true", help="regenerate the trace export")
     g.add_argument("--inputs", default=None, help="default: data/sample_inputs/conversations.jsonl")
     g.add_argument(
         "--commit-evidence", action="store_true",
         help="write to the canonical traces/ and logs/ paths instead of artifacts_regen/",
     )
     g.add_argument("--keep-ui", action="store_true", help="leave the Phoenix UI running afterwards")
+    g.add_argument("--eval", action="store_true", help="also regenerate the DeepEval report")
+    g.add_argument("--limit", type=int, default=None, help="cap the eval to the first N golden cases")
     g.set_defaults(func=cmd_regenerate)
+
+    ev = sub.add_parser("eval", help="run the golden set through DeepEval (AC-12)")
+    ev.add_argument("--out", default=None, help="default: reports/eval_report.json")
+    ev.add_argument("--limit", type=int, default=None, help="run only the first N golden cases (smoke test)")
+    ev.add_argument("--no-score", action="store_true", help="skip DeepEval metric calls (accuracy only)")
+    ev.set_defaults(func=cmd_eval)
 
     e = sub.add_parser("export", help="export Phoenix spans to parquet/csv")
     e.add_argument("--project", default=None, help="Phoenix project name (default: PHOENIX_PROJECT)")
