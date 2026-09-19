@@ -268,6 +268,46 @@ def _write_checkpoint(golden_set_path: Path, score: bool, results: list[dict[str
     )
 
 
+def _build_and_write_report(
+    *,
+    golden_set_path: Path,
+    out_path: Path,
+    score: bool,
+    results: list[dict[str, Any]],
+    complete: bool,
+) -> dict[str, Any]:
+    """Build the report dict and write it to out_path. Called after every
+    case (complete=False, so a crash mid-run still leaves the real,
+    inspectable partial report on disk at its committed path -- not just
+    the gitignored checkpoint) and once more at the very end
+    (complete=True)."""
+    report = {
+        "metadata": {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "git_commit": _git_commit(),
+            "dataset_path": str(golden_set_path),
+            "dataset_sha256": _sha256_file(golden_set_path),
+            "worker_model": settings.gemini_model,
+            "judge_model": settings.gemini_judge_model,
+            "scored": score,
+            "complete": complete,
+            "package_versions": _package_versions(),
+        },
+        "metrics": _aggregate(results),
+        "results": results,
+    }
+    # Defense-in-depth (NFR-05): worker_results in raw graph state is not
+    # itself re-sanitized by the output guardrail (only the final answer's
+    # local copy is, inside finalize_node) -- in practice the underlying MCP
+    # tool outputs are already masked at the source, but every committed
+    # report/log in this project masks again at the point of writing rather
+    # than trusting an upstream layer.
+    masked_report = mask_obj(report)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(masked_report, indent=2, ensure_ascii=False), encoding="utf-8")
+    return masked_report
+
+
 async def run_eval(
     *,
     golden_set_path: Path = GOLDEN_SET_PATH,
@@ -353,6 +393,10 @@ async def run_eval(
                 elapsed = time.monotonic() - t0
                 results.append(r)
                 _write_checkpoint(golden_set_path, score, results)
+                _build_and_write_report(
+                    golden_set_path=golden_set_path, out_path=out_path, score=score,
+                    results=results, complete=False,
+                )
                 match = "OK" if r["accuracy_match"] else "MISMATCH"
                 print(
                     f"eval: [{i}/{len(cases)}] {case['id']} ({case['category']}) -- "
@@ -362,27 +406,7 @@ async def run_eval(
                 )
         flush_tracing()
 
-    report = {
-        "metadata": {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "git_commit": _git_commit(),
-            "dataset_path": str(golden_set_path),
-            "dataset_sha256": _sha256_file(golden_set_path),
-            "worker_model": settings.gemini_model,
-            "judge_model": settings.gemini_judge_model,
-            "scored": score,
-            "package_versions": _package_versions(),
-        },
-        "metrics": _aggregate(results),
-        "results": results,
-    }
-    # Defense-in-depth (NFR-05): worker_results in raw graph state is not
-    # itself re-sanitized by the output guardrail (only the final answer's
-    # local copy is, inside finalize_node) -- in practice the underlying MCP
-    # tool outputs are already masked at the source, but every committed
-    # report/log in this project masks again at the point of writing rather
-    # than trusting an upstream layer.
-    masked_report = mask_obj(report)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps(masked_report, indent=2, ensure_ascii=False), encoding="utf-8")
-    return masked_report
+    return _build_and_write_report(
+        golden_set_path=golden_set_path, out_path=out_path, score=score,
+        results=results, complete=True,
+    )
