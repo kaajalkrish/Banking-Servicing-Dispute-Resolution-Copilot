@@ -39,3 +39,12 @@ def test_match_prefix_never_includes_the_full_secret():
     assert len(findings) == 1
     assert len(findings[0]["match_prefix"]) < len(text)
     assert "1234567890abcdefghijklmnopqrstuv" not in findings[0]["match_prefix"]
+
+
+def test_own_test_fixture_file_is_excluded_from_the_real_scan():
+    # This test file itself contains fake secret-shaped literals (above) to
+    # exercise scan_text's pattern matching -- a real end-to-end run must not
+    # flag its own fixtures as findings (found by actually running the
+    # scanner, not assumed).
+    tree_findings = cs.scan_working_tree()
+    assert not any("test_check_secrets.py" in f["source"] for f in tree_findings)

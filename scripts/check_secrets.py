@@ -37,6 +37,14 @@ SECRET_PATTERNS = {
 EXCLUDED_DIRS = {".git", ".venv", "venv", "__pycache__", ".phoenix", "node_modules", "artifacts_regen"}
 PLACEHOLDER_VALUES = {"", "PASTE_YOUR_GEMINI_API_KEY_HERE", "your_key_here"}
 
+# tests/test_check_secrets.py deliberately embeds fake secret-shaped literals
+# (a fake Google key, a fake OAuth token, a fake private-key block) to test
+# the patterns above -- those are test fixtures, not real secrets, but they
+# would otherwise match every one of SECRET_PATTERNS in both the working tree
+# and every git-history diff that ever touched that file (found by actually
+# running this scanner end to end, not assumed).
+EXCLUDED_FILES = {"tests/test_check_secrets.py"}
+
 
 def _run_git(args: list[str]) -> str:
     # Explicit UTF-8 + replace: `git log -p --all` includes binary-file diffs
@@ -66,6 +74,8 @@ def scan_working_tree() -> list[dict]:
     for path in _tracked_files():
         if any(part in EXCLUDED_DIRS for part in path.parts):
             continue
+        if path.relative_to(_REPO_ROOT).as_posix() in EXCLUDED_FILES:
+            continue
         if not path.is_file():
             continue
         try:
@@ -77,7 +87,7 @@ def scan_working_tree() -> list[dict]:
 
 
 def scan_git_history() -> list[dict]:
-    log = _run_git(["log", "-p", "--all"])
+    log = _run_git(["log", "-p", "--all", "--", ".", *(f":(exclude){f}" for f in EXCLUDED_FILES)])
     return scan_text(log, "git-history")
 
 

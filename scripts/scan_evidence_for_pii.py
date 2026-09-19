@@ -47,7 +47,17 @@ _ACCOUNT_NUMBER = re.compile(r"\bAC\d{10}\b")
 
 # The D-14 sample deliberately shows a raw "before" value to demonstrate the
 # redaction pipeline (src/guardrails/pii.py) — it is not a masking failure.
-ALLOWLISTED_FILES = {"reports/pii_redaction_sample.json"}
+# The red-team report/doc reflect data/redteam/attacks.jsonl's own fixture
+# text verbatim (e.g. rt-005's fictional "AC9999999999" destination account in
+# an injection payload) — fabricated attack data we wrote ourselves, never a
+# real customer number that leaked past masking, so it is not a masking
+# failure either (found by actually running this scanner over the full P4-15
+# evidence set, not assumed up front).
+ALLOWLISTED_FILES = {
+    "reports/pii_redaction_sample.json",
+    "reports/redteam_results.json",
+    "docs/redteam-results.md",
+}
 
 TEXT_SUFFIXES = {".json", ".jsonl", ".md", ".log", ".txt", ".csv"}
 

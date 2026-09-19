@@ -1,0 +1,108 @@
+[
+  {
+    "before": "My card number is 4000009083863798, can you check my balance?",
+    "detections": [
+      {
+        "entity_type": "CREDIT_CARD",
+        "start": 18,
+        "end": 34,
+        "score": 1.0
+      },
+      {
+        "entity_type": "DATE_TIME",
+        "start": 18,
+        "end": 34,
+        "score": 0.85
+      },
+      {
+        "entity_type": "US_BANK_NUMBER",
+        "start": 18,
+        "end": 34,
+        "score": 0.05
+      },
+      {
+        "entity_type": "US_DRIVER_LICENSE",
+        "start": 18,
+        "end": 34,
+        "score": 0.01
+      }
+    ],
+    "after": "My card number is <CREDIT_CARD>, can you check my balance?",
+    "had_pii": true
+  },
+  {
+    "before": "Please debit account AC1001571945 for the payment I set up yesterday.",
+    "detections": [
+      {
+        "entity_type": "BANK_ACCOUNT_NUMBER",
+        "start": 21,
+        "end": 33,
+        "score": 0.9
+      },
+      {
+        "entity_type": "DATE_TIME",
+        "start": 59,
+        "end": 68,
+        "score": 0.85
+      }
+    ],
+    "after": "Please debit account <BANK_ACCOUNT_NUMBER> for the payment I set up <DATE_TIME>.",
+    "had_pii": true
+  },
+  {
+    "before": "Can you check on customer C0002 for me? He asked me to follow up.",
+    "detections": [
+      {
+        "entity_type": "CUSTOMER_ID",
+        "start": 26,
+        "end": 31,
+        "score": 0.6
+      },
+      {
+        "entity_type": "US_DRIVER_LICENSE",
+        "start": 26,
+        "end": 31,
+        "score": 0.3
+      }
+    ],
+    "after": "Can you check on customer <CUSTOMER_ID> for me? He asked me to follow up.",
+    "had_pii": true
+  },
+  {
+    "before": "Please email me at jane.doe@example.com or call 555-123-4567 to confirm the dispute.",
+    "detections": [
+      {
+        "entity_type": "EMAIL_ADDRESS",
+        "start": 19,
+        "end": 39,
+        "score": 1.0
+      },
+      {
+        "entity_type": "URL",
+        "start": 19,
+        "end": 26,
+        "score": 0.5
+      },
+      {
+        "entity_type": "URL",
+        "start": 28,
+        "end": 39,
+        "score": 0.5
+      },
+      {
+        "entity_type": "PHONE_NUMBER",
+        "start": 48,
+        "end": 60,
+        "score": 0.4
+      }
+    ],
+    "after": "Please email me at <EMAIL_ADDRESS> or call <PHONE_NUMBER> to confirm the dispute.",
+    "had_pii": true
+  },
+  {
+    "before": "What is the overdraft fee for a checking account?",
+    "detections": [],
+    "after": "What is the overdraft fee for a checking account?",
+    "had_pii": false
+  }
+]
