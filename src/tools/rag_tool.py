@@ -19,8 +19,9 @@ from functools import partial
 from typing import Any, Literal
 
 from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.tools import BaseTool
 from langgraph.graph import END, START, StateGraph
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PrivateAttr
 from typing_extensions import TypedDict
 
 from src.agents._common import extract_text
@@ -185,12 +186,31 @@ def build_rag_subgraph(*, collection: Any, grader_llm: Any, rewriter_llm: Any, a
     return g.compile()
 
 
-class PolicySearchTool:
-    """LangChain-tool-shaped wrapper (``.name`` + async ``.ainvoke(dict)``) so
-    workers and the resilience/logging wrappers can call it like any other
-    tool, while the actual work runs through the compiled RAG subgraph."""
+class PolicySearchInput(BaseModel):
+    query: str = Field(description="The customer's question to search the policy corpus for.")
 
-    name = "policy_search"
+
+class PolicySearchTool(BaseTool):
+    """A genuine ``langchain_core.tools.BaseTool`` subclass — not just a
+    duck-typed ``.name`` + ``.ainvoke()`` object — so OpenInference's LangChain
+    auto-instrumentation recognises calls to it as a TOOL-kind span (verified:
+    an earlier plain-class version produced no span at all for this tool,
+    since the instrumentor only recognises real ``BaseTool``/``BaseRetriever``
+    invocations; the RAG subgraph's own internal nodes showed up as
+    CHAIN/LLM instead, which is still true for THEIR spans, but the outer
+    ``policy_search`` call itself is now traced correctly)."""
+
+    name: str = "policy_search"
+    description: str = (
+        "Search the banking policy corpus for an answer to a customer's "
+        "product, fee or servicing-policy question. Returns citations, or "
+        "abstains if the corpus does not support an answer."
+    )
+    args_schema: type[BaseModel] = PolicySearchInput
+
+    _graph: Any = PrivateAttr()
+    _top_k: int = PrivateAttr()
+    _max_rewrites: int = PrivateAttr()
 
     def __init__(
         self,
@@ -199,16 +219,18 @@ class PolicySearchTool:
         llm: Any = None,
         top_k: int = DEFAULT_TOP_K,
         max_rewrites: int = DEFAULT_MAX_REWRITES,
+        **kwargs: Any,
     ) -> None:
-        self._collection = collection if collection is not None else get_collection()
-        self._graph = build_rag_subgraph(
-            collection=self._collection, grader_llm=llm, rewriter_llm=llm, answer_llm=llm
-        )
+        super().__init__(**kwargs)
+        col = collection if collection is not None else get_collection()
+        self._graph = build_rag_subgraph(collection=col, grader_llm=llm, rewriter_llm=llm, answer_llm=llm)
         self._top_k = top_k
         self._max_rewrites = max_rewrites
 
-    async def ainvoke(self, args: dict[str, Any]) -> dict[str, Any]:
-        query = args["query"]
+    def _run(self, query: str) -> dict[str, Any]:
+        raise NotImplementedError("PolicySearchTool is async-only; use ainvoke().")
+
+    async def _arun(self, query: str) -> dict[str, Any]:
         initial: RagState = {
             "query": query,
             "original_query": query,
