@@ -17,6 +17,23 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 
 from src.config import settings
 
+# Real Gemini request count (every attempt, including ones that fail and
+# retry) since the last reset -- used by src.evaluation.harness to report
+# how many calls each golden-set case actually took (asked for explicitly
+# so a live run's progress/cost is visible while it runs, not just at the
+# end). Not used by the graph/CLI itself; a plain module-level counter is
+# enough since the harness runs cases sequentially, not concurrently.
+_call_count = 0
+
+
+def reset_call_count() -> None:
+    global _call_count
+    _call_count = 0
+
+
+def call_count() -> int:
+    return _call_count
+
 _ROLE_MODELS = {
     "default": lambda: settings.gemini_model,
     "fast": lambda: settings.gemini_model_fast,
@@ -76,10 +93,12 @@ async def ainvoke_with_backoff(
     Non-transient errors propagate immediately (e.g. an invalid API key), so real
     configuration problems surface fast rather than being retried in a loop.
     """
+    global _call_count
     retries = settings.max_retries if max_retries is None else max_retries
     attempt = 0
     while True:
         try:
+            _call_count += 1
             return await llm.ainvoke(messages)
         except Exception as exc:  # noqa: BLE001 - re-raised unless transient
             if not _is_transient(exc) or attempt >= retries:

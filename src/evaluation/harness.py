@@ -252,9 +252,11 @@ async def run_eval(
     test / faster accuracy-only check) -- useful given each metric call is
     its own Gemini request on top of the graph's own calls.
     """
+    import time
+
     from src.evaluation.gemini_judge import GeminiJudge
     from src.graph import build_graph, open_checkpointer, run_config  # noqa: F401 (run_config unused; thread_id built inline)
-    from src.llm import get_llm
+    from src.llm import call_count, get_llm, reset_call_count
     from src.memory.long_term import build_extractor, open_memory_store
     from src.observability.tracing import flush_tracing, init_tracing
     from src.cli import _load_tools
@@ -263,8 +265,10 @@ async def run_eval(
     init_tracing()
 
     cases = load_golden_set(golden_set_path, limit=limit)
+    print(f"eval: {len(cases)} case(s) to run (scoring={'on' if score else 'off'})", flush=True)
     tools = await _load_tools()
     worker_llm = get_llm("default")
+    judge = GeminiJudge() if score else None
 
     results: list[dict[str, Any]] = []
     async with open_checkpointer() as saver, open_memory_store() as mstore:
@@ -281,19 +285,26 @@ async def run_eval(
         # (earlier in the file) having already saved memory through the same
         # shared memory_store -- and it keeps Gemini call concurrency low,
         # which matters given the real per-minute rate limits hit in Phase 4.
-        for case in cases:
-            results.append(await _run_case(graph, case))
+        for i, case in enumerate(cases, 1):
+            reset_call_count()
+            t0 = time.monotonic()
+            r = await _run_case(graph, case)
+            if judge is not None:
+                await _score_case(judge, r)
+            else:
+                r["hallucination_score"] = None
+                r["faithfulness_score"] = None
+                r["answer_relevancy_score"] = None
+            elapsed = time.monotonic() - t0
+            results.append(r)
+            match = "OK" if r["accuracy_match"] else "MISMATCH"
+            print(
+                f"eval: [{i}/{len(cases)}] {case['id']} ({case['category']}) -- "
+                f"{call_count()} calls, {elapsed:.1f}s, expected={case['expected_behavior']} "
+                f"observed={r['observed_behavior']} [{match}]",
+                flush=True,
+            )
     flush_tracing()
-
-    if score:
-        judge = GeminiJudge()
-        for r in results:
-            await _score_case(judge, r)
-    else:
-        for r in results:
-            r["hallucination_score"] = None
-            r["faithfulness_score"] = None
-            r["answer_relevancy_score"] = None
 
     report = {
         "metadata": {
