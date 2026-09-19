@@ -40,23 +40,142 @@ _WORKER_NODES = {
 }
 
 
+_REFUSAL_MESSAGES = {
+    "prompt_injection_detected": (
+        "I can't follow instructions embedded in a message like that. "
+        "How can I help with your banking request?"
+    ),
+    "cross_customer_reference": (
+        "I can only help with your own account. If this is about another "
+        "customer, please contact us directly."
+    ),
+    "input_too_long": "That message is too long for me to process — could you summarize your request?",
+}
+_DEFAULT_REFUSAL = "I'm not able to help with that request. A human agent can assist further."
+
+
+def _safe_refusal_message(reason_code: str | None) -> str:
+    return _REFUSAL_MESSAGES.get(reason_code, _DEFAULT_REFUSAL)
+
+
+async def ingress_input_guard_node(state: dict[str, Any]) -> dict[str, Any]:
+    """Sanitize + evaluate the latest customer message before routing (P4-09):
+    PII is masked (D-10); injection, cross-customer or overlong input is
+    blocked outright with a safe refusal, short-circuiting straight to
+    finalize without ever reaching the supervisor or a worker."""
+    from src.guardrails.audit import record_action
+    from src.guardrails.ingress import sanitize_ingress
+    from src.guardrails.input import evaluate_input
+
+    text = latest_user_text(state)
+    customer_id = state["customer_id"]
+
+    ingress_result = sanitize_ingress(text)
+    sanitized_text = ingress_result["sanitized_text"]
+    update: dict[str, Any] = {
+        "ingress": {"sanitized_text": sanitized_text, "had_pii": ingress_result["had_pii"]}
+    }
+
+    if ingress_result["had_pii"]:
+        record_action(
+            actor="input_guard",
+            action="sanitize_input",
+            decision="sanitized",
+            reason_code="pii_detected",
+            customer_id=customer_id,
+            details={"entity_types": [d["entity_type"] for d in ingress_result["detections"]]},
+        )
+
+    # Use the RAW text here, not sanitized_text: sanitize_ingress() already
+    # masked any CUSTOMER_ID mention (e.g. "C0002" -> "<CUSTOMER_ID>"), which
+    # would destroy the evidence detect_cross_customer_reference() needs to
+    # compare against the authenticated customer id (real bug, found live).
+    input_result = evaluate_input(text, authenticated_customer_id=customer_id)
+    if input_result["decision"] == "block":
+        record_action(
+            actor="input_guard",
+            action="block_input",
+            decision="blocked",
+            reason_code=input_result["reason_code"],
+            customer_id=customer_id,
+            details=input_result["details"],
+        )
+        update["route"] = "finalize"
+        update["requires_human_review"] = True
+        update["worker_results"] = [
+            {
+                "worker": "input_guard",
+                "content": _safe_refusal_message(input_result["reason_code"]),
+                "citations": [],
+                "requires_human_review": True,
+            }
+        ]
+    return update
+
+
+def route_after_input_guard(state: dict[str, Any]) -> str:
+    """Pure conditional-edge function: blocked input skips straight to
+    finalize; everything else continues into the normal graph flow."""
+    return "finalize" if state.get("route") == "finalize" else "continue"
+
+
 async def finalize_node(state: dict[str, Any]) -> dict[str, Any]:
-    """Package the final answer and append it as the assistant message."""
+    """Package the final answer: applies the output guardrail (mask any
+    leaked PAN/account, block another customer's id, rewrite refund/approval
+    promises) and the output-risk classifier (a backstop human-review gate)
+    before returning (P4-09)."""
+    from src.guardrails.audit import record_action
+    from src.guardrails.output import sanitize_output
+    from src.guardrails.output_risk import classify_and_gate
+
     results = state.get("worker_results", [])
     escalated = bool(state.get("escalated"))
-    requires_human = bool(state.get("requires_human_review"))
+    customer_id = state.get("customer_id", "")
 
     if results:
+        worker = results[-1]["worker"]
         content = results[-1]["content"]
         citations = results[-1].get("citations", [])
+        requires_human = bool(results[-1].get("requires_human_review") or state.get("requires_human_review"))
     elif escalated:
+        worker = "escalate_human"
         content = "This request needs a human banking agent, who will follow up."
         citations = []
+        requires_human = True
     else:
+        worker = "escalate_human"
         content = "I couldn't complete that request. Let me connect you to a human agent."
         citations = []
+        requires_human = True
 
-    risk_tier = "high" if (escalated or requires_human) else "low"
+    output_result = sanitize_output(content, authenticated_customer_id=customer_id)
+    content = output_result["sanitized_text"]
+    if output_result["other_customer_blocked"] or output_result["refund_rewrites"] or output_result["system_prompt_leak_detected"]:
+        record_action(
+            actor="output_guard",
+            action="sanitize_output",
+            decision="sanitized",
+            customer_id=customer_id,
+            details={
+                "other_customer_blocked": output_result["other_customer_blocked"],
+                "refund_rewrites": bool(output_result["refund_rewrites"]),
+                "system_prompt_leak_detected": output_result["system_prompt_leak_detected"],
+            },
+        )
+
+    risk_result = classify_and_gate(worker, content, requires_human_review=requires_human)
+    risk_tier = risk_result["risk_tier"]
+    requires_human = risk_result["requires_human_review"]
+
+    record_action(
+        actor="finalize",
+        action="finalize_answer",
+        decision=risk_tier,
+        reason_code=worker,
+        customer_id=customer_id,
+        details={"requires_human_review": requires_human},
+    )
+
     final = FinalAnswer(
         answer=content,
         citations=citations,
@@ -126,6 +245,9 @@ def build_graph(
     """
     g = StateGraph(CopilotState)
 
+    # Ingress + input guard: always wired in, not opt-in (AC-06/AC-10 are
+    # security requirements, unlike the memory pipeline's opt-in feature).
+    g.add_node("input_guard", ingress_input_guard_node)
     g.add_node("supervisor", partial(supervisor_node, llm=supervisor_llm))
     for name, fn in _WORKER_NODES.items():
         # Every tool is routed through the registry (resilience + logging,
@@ -142,11 +264,16 @@ def build_graph(
             "build_context", partial(build_context_node, summarizer_llm=summarizer_llm or worker_llm)
         )
         g.add_node("save_memory", partial(save_memory_node, memory_extractor=memory_extractor))
-        g.add_edge(START, "load_memory")
+
+    g.add_edge(START, "input_guard")
+    g.add_conditional_edges(
+        "input_guard",
+        route_after_input_guard,
+        {"finalize": "finalize", "continue": "load_memory" if memory_enabled else "supervisor"},
+    )
+    if memory_enabled:
         g.add_edge("load_memory", "build_context")
         g.add_edge("build_context", "supervisor")
-    else:
-        g.add_edge(START, "supervisor")
 
     g.add_conditional_edges(
         "supervisor",

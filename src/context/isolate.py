@@ -21,8 +21,7 @@ _WORKER_FIELD_ALLOWLIST: dict[str, tuple[str, ...]] = {
     "escalate_human": (),
 }
 
-_CORE_FIELDS = ("customer_id", "messages", "context")
-
+_CORE_FIELDS = ("customer_id", "messages", "context", "ingress")
 
 
 def isolate_for_worker(state: dict[str, Any], worker: str) -> dict[str, Any]:

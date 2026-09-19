@@ -61,7 +61,7 @@ async def account_servicing_node(
     iso = isolate_for_worker(state, "account_servicing")
     text = latest_user_text(iso)
     tool_name = _choose(text)
-    tool = get_tool(tools, tool_name)
+    tool = get_tool(tools, tool_name, authenticated_customer_id=iso["customer_id"])
 
     if tool is None:
         return record_result(state, "account_servicing", "That capability is unavailable right now.")

@@ -54,7 +54,7 @@ async def _try_answer_from_memory(llm: Any, text: str, memory_block: str) -> str
 async def product_info_node(state: dict[str, Any], *, tools: list[Any], llm: Any) -> dict[str, Any]:
     iso = isolate_for_worker(state, "product_info")
     text = latest_user_text(iso)
-    tool = get_tool(tools, "policy_search")
+    tool = get_tool(tools, "policy_search", authenticated_customer_id=iso["customer_id"])
     if tool is None:
         return record_result(
             state, "product_info", "That capability is unavailable right now.", requires_human_review=True

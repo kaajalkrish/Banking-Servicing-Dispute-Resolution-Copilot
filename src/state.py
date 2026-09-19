@@ -50,6 +50,14 @@ class CopilotState(TypedDict, total=False):
     memory: dict[str, Any]
     guardrail: dict[str, Any]
 
+    # Input-guard result for this turn (P4-09): sanitized text + PII flag.
+    # Must be declared here — a key absent from the TypedDict schema is not a
+    # tracked LangGraph channel, so an update to it can be silently dropped
+    # during real graph execution even though it survives a manual dict merge
+    # (verified: an isolated `{**state, **update}` test showed correct PAN
+    # masking, but the same update via a compiled graph's ainvoke() did not).
+    ingress: dict[str, Any]
+
 
 def new_state(customer_id: str, user_text: str, *, max_steps: int, account_ref: str | None = None) -> CopilotState:
     """Build an initial state for one conversation turn."""
