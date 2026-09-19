@@ -179,6 +179,51 @@ async def cmd_run(args: argparse.Namespace) -> int:
     return 0
 
 
+async def cmd_regenerate(args: argparse.Namespace) -> int:
+    """Regenerate committed evidence from the sample conversations (NFR-02,
+    §3.4 Reproducibility Rule). Default output is artifacts_regen/
+    (gitignored); --commit-evidence writes the canonical traces/ and logs/
+    paths instead (D-06). --keep-ui leaves the Phoenix server running
+    afterwards so a dashboard screenshot can be taken (P5)."""
+    import os
+
+    from src.observability.export import export_project
+
+    if not args.traces:
+        _print("regenerate: pass --traces to regenerate the trace export (eval is added in Phase 5)")
+        return 1
+
+    inputs_path = args.inputs or "data/sample_inputs/conversations.jsonl"
+
+    if args.commit_evidence:
+        log_dir = Path("logs")
+        parquet_path = Path("traces/phoenix_spans.parquet")
+    else:
+        out_dir = Path("artifacts_regen")
+        log_dir = out_dir / "logs"
+        parquet_path = out_dir / "traces" / "phoenix_spans.parquet"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    os.environ["LOG_DIR"] = str(log_dir)  # picked up by mcp transcript + tool logging (read fresh, not cached)
+
+    exit_code = await cmd_run(argparse.Namespace(inputs=inputs_path))
+    if exit_code != 0:
+        return exit_code
+
+    df = export_project(settings.phoenix_project, parquet_path=parquet_path)
+    _print(f"regenerate: exported {len(df)} spans -> {parquet_path}")
+    _print(f"regenerate: logs written under {log_dir}/")
+
+    if args.keep_ui:
+        _print("Phoenix UI running at http://localhost:6006 -- press Ctrl+C to stop.")
+        try:
+            while True:
+                await asyncio.sleep(3600)
+        except KeyboardInterrupt:
+            pass
+
+    return 0
+
+
 async def cmd_export(args: argparse.Namespace) -> int:
     from src.observability.export import export_project
 
@@ -221,6 +266,16 @@ def build_parser() -> argparse.ArgumentParser:
     r = sub.add_parser("run", help="run a batch of sample conversations")
     r.add_argument("--inputs", required=True)
     r.set_defaults(func=cmd_run)
+
+    g = sub.add_parser("regenerate", help="regenerate committed evidence from sample conversations")
+    g.add_argument("--traces", action="store_true", help="regenerate the trace export (required for now)")
+    g.add_argument("--inputs", default=None, help="default: data/sample_inputs/conversations.jsonl")
+    g.add_argument(
+        "--commit-evidence", action="store_true",
+        help="write to the canonical traces/ and logs/ paths instead of artifacts_regen/",
+    )
+    g.add_argument("--keep-ui", action="store_true", help="leave the Phoenix UI running afterwards")
+    g.set_defaults(func=cmd_regenerate)
 
     e = sub.add_parser("export", help="export Phoenix spans to parquet/csv")
     e.add_argument("--project", default=None, help="Phoenix project name (default: PHOENIX_PROJECT)")
