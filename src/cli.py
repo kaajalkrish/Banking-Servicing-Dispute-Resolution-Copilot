@@ -179,6 +179,24 @@ async def cmd_run(args: argparse.Namespace) -> int:
     return 0
 
 
+async def cmd_export(args: argparse.Namespace) -> int:
+    from src.observability.export import export_project
+
+    project = args.project or settings.phoenix_project
+    parquet_path = Path(args.parquet) if args.parquet else None
+    csv_path = Path(args.csv) if args.csv else None
+    if parquet_path is None and csv_path is None:
+        parquet_path = Path("traces/phoenix_spans.parquet")  # canonical default (§7.2)
+
+    df = export_project(project, parquet_path=parquet_path, csv_path=csv_path)
+    _print(f"exported {len(df)} spans for project {project!r}")
+    if parquet_path is not None:
+        _print(f"  parquet -> {parquet_path}")
+    if csv_path is not None:
+        _print(f"  csv -> {csv_path}")
+    return 0
+
+
 async def _load_tools() -> list[Any]:
     from src.llm import get_llm
     from src.mcp_client import get_mcp_tools
@@ -203,6 +221,12 @@ def build_parser() -> argparse.ArgumentParser:
     r = sub.add_parser("run", help="run a batch of sample conversations")
     r.add_argument("--inputs", required=True)
     r.set_defaults(func=cmd_run)
+
+    e = sub.add_parser("export", help="export Phoenix spans to parquet/csv")
+    e.add_argument("--project", default=None, help="Phoenix project name (default: PHOENIX_PROJECT)")
+    e.add_argument("--parquet", default=None, help="output parquet path (default: traces/phoenix_spans.parquet)")
+    e.add_argument("--csv", default=None, help="output csv path (optional)")
+    e.set_defaults(func=cmd_export)
 
     d = sub.add_parser("mcp-demo", help="exercise the MCP tools and write the transcript")
     d.set_defaults(func=cmd_mcp_demo)
