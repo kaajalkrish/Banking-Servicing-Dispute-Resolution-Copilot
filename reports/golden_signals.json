@@ -1,16 +1,16 @@
 {
   "project": "bank-copilot",
-  "span_count": 6810,
+  "span_count": 6820,
   "latency_by_class": {
     "acting": {
-      "p50_ms": 15.008000000000001,
-      "p95_ms": 9242.8555,
-      "count": 5207
+      "p50_ms": 15.011500000000002,
+      "p95_ms": 9413.423999999999,
+      "count": 5216
     },
     "thinking": {
-      "p50_ms": 692.5945,
-      "p95_ms": 7463.60425,
-      "count": 1506
+      "p50_ms": 693.437,
+      "p95_ms": 7451.926300000011,
+      "count": 1507
     },
     "tool": {
       "p50_ms": 3573.435,
@@ -19,26 +19,32 @@
     }
   },
   "tokens": {
-    "input_tokens": 566212,
-    "output_tokens": 97788,
-    "llm_call_count": 1506
+    "input_tokens": 566547,
+    "output_tokens": 97826,
+    "llm_call_count": 1507
   },
   "request_volume": {
-    "request_count": 6810,
-    "error_count": 814,
-    "error_rate": 0.11953010279001468
+    "request_count": 6820,
+    "error_count": 816,
+    "error_rate": 0.11964809384164223
   },
   "cost": {
-    "total_usd": null,
-    "note": "price not confirmed for: gemini-3.1-flash-lite, gemini-3.5-flash, gemini-3.5-flash-lite (see src/observability/pricing.py, [MANUAL] M-3)",
+    "total_usd": 0.4398343,
+    "per_model_usd": {
+      "gemini-3.1-flash-lite": 0.11745549999999999,
+      "gemini-3.5-flash": 0.10605,
+      "gemini-3.5-flash-lite": 0.21632880000000002
+    },
     "models": [
       "gemini-3.1-flash-lite",
       "gemini-3.5-flash",
       "gemini-3.5-flash-lite"
     ],
-    "per_model_usd": null
+    "price_source_url": "https://ai.google.dev/gemini-api/docs/pricing",
+    "prices_confirmed_on": "2026-09-19",
+    "basis": "paid-tier Standard list price, text input; runs used the free tier, so this is the equivalent cost at list price, not billed spend"
   },
   "accuracy": 0.6,
   "hallucination_rate": 0.0,
-  "eval_report_source": "reports/eval_report_initial.json"
+  "eval_report_source": "reports\\eval_report_initial.json"
 }
