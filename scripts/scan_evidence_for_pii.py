@@ -45,6 +45,20 @@ SCAN_DIRS = ("logs", "traces", "reports", "docs")
 _DIGIT_RUN = re.compile(r"(?<!\d)(?:\d[ -]?){12,18}\d(?!\d)")
 _ACCOUNT_NUMBER = re.compile(r"\bAC\d{10}\b")
 
+# Machine identifiers that can contain a long Luhn-valid digit run purely by
+# chance: OTel span ids (16 hex), trace ids and LangMem memory ids (32 hex) and
+# UUIDs. Found by running this scanner over the re-exported 6,810-span trace
+# export, where such ids produced >1,200 false "PAN" findings. An identifier
+# must contain at least one a-f letter, so a plain all-digit number is never
+# treated as one, and it must stand alone (no adjacent letter or digit; a hyphen is fine, as in run-<uuid>), so
+# a card number glued to other text ("card4222...") is still flagged.
+_HEX_ID = re.compile(
+    r"(?<![0-9A-Za-z])(?:"
+    r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
+    r"|[0-9a-fA-F]{32}|[0-9a-fA-F]{16})(?![0-9A-Za-z])"
+)
+_ID_WINDOW = 40  # longer than the longest identifier (36) so one always fits
+
 # The D-14 sample deliberately shows a raw "before" value to demonstrate the
 # redaction pipeline (src/guardrails/pii.py) — it is not a masking failure.
 # The red-team report/doc reflect data/redteam/attacks.jsonl's own fixture
@@ -66,11 +80,32 @@ def _rel(path: Path) -> str:
     return path.relative_to(_REPO_ROOT).as_posix()
 
 
+def _inside_hex_identifier(text: str, start: int, end: int) -> bool:
+    """True if a digit run starts inside a span id, trace id or UUID. (It may
+    run past the id's end: LangChain run ids look like ``<uuid>-0``, and the
+    digit-run pattern absorbs that trailing ``-0``.)"""
+    lo, hi = max(0, start - _ID_WINDOW), min(len(text), end + _ID_WINDOW)
+    for m in _HEX_ID.finditer(text, lo, hi):
+        if m.start() <= start < m.end() and re.search(r"[a-fA-F]", m.group(0)):
+            return True
+    return False
+
+
+def _is_decimal_fraction(text: str, start: int) -> bool:
+    """A digit run right after ``<digit>.`` is the fractional part of a float
+    (e.g. a retrieval distance ``0.1234...``), not a card number."""
+    return start >= 2 and text[start - 1] == "." and text[start - 2].isdigit()
+
+
 def scan_text(text: str, source: str) -> list[dict]:
     findings = []
     for match in _DIGIT_RUN.finditer(text):
         digits = re.sub(r"\D", "", match.group(0))
-        if luhn_check(digits):
+        if (
+            luhn_check(digits)
+            and not _inside_hex_identifier(text, match.start(), match.end())
+            and not _is_decimal_fraction(text, match.start())
+        ):
             findings.append({"kind": "unmasked_pan", "source": source, "last4": digits[-4:]})
     for match in _ACCOUNT_NUMBER.finditer(text):
         findings.append({"kind": "unmasked_account_number", "source": source, "last4": match.group(0)[-4:]})
