@@ -233,3 +233,14 @@ def test_manifest_records_sha256_size_and_producing_command(tmp_path):
     assert "golden_signals" in entry["produced_by"]
     assert manifest["artifact_count"] == len(manifest["artifacts"]) > 20
     assert all(a["path"] != "mcp_server" for a in manifest["artifacts"])  # directories are not hashed
+
+
+def test_manifest_includes_supporting_evidence_when_present(tmp_path):
+    _touch_all_required(tmp_path)
+    (tmp_path / "reports/output_risk_sample.json").write_text("{}", encoding="utf-8")
+    manifest = v.build_manifest(tmp_path)
+    entry = next(a for a in manifest["artifacts"] if a["path"] == "reports/output_risk_sample.json")
+    assert entry["section"] == "supporting"
+    assert entry["produced_by"] == "python scripts/output_risk_sample.py"
+    # absent supporting files are simply not listed
+    assert all(a["path"] != "logs/api_demo.log" for a in manifest["artifacts"])

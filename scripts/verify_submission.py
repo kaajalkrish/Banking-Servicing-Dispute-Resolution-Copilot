@@ -96,6 +96,25 @@ PRODUCING_COMMANDS: dict[str, str] = {
     "reports/eval_report.json": "python -m src.cli eval --out reports/eval_report.json",
 }
 
+# Supporting evidence the section 7 table does not list but the submission relies
+# on. Included in the manifest (when present) with the command that produced it.
+EXTRA_ARTIFACTS: dict[str, str] = {
+    "reports/eval_report_initial.json": "GEMINI_MODEL=gemini-3.1-flash-lite ... python -m src.cli eval --limit 30 --out reports/eval_report_initial.json",
+    "reports/output_risk_sample.json": "python scripts/output_risk_sample.py",
+    "logs/api_demo.log": "python scripts/demo_api.py --conversations conv-balance,conv-injection",
+    "reports/citation_check.json": "python scripts/verify_citations.py",
+    "reports/tool_reconciliation.json": "python scripts/verify_tool_names.py",
+    "reports/redteam_results.json": "python -m src.cli redteam",
+    "docs/redteam-results.md": "python -m src.cli redteam",
+    "reports/pii_redaction_sample.json": "python scripts/pii_redaction_sample.py",
+    "reports/secrets_scan.json": "python scripts/check_secrets.py",
+    "reports/pii_scan.json": "python scripts/scan_evidence_for_pii.py",
+    "docs/control-catalog.md": "hand-written; checked by python scripts/verify_citations.py",
+    "docs/architecture.md": "hand-written",
+    "docs/security-approach.md": "hand-written; checked by python scripts/verify_citations.py",
+    "docs/delivery-runbook.md": "hand-written",
+}
+
 TOOL_CALL_FIELDS = {"timestamp", "agent", "tool_name", "args", "result", "latency_ms", "status"}
 AUDIT_FIELDS = {"actor", "action", "tool", "decision", "timestamp"}
 MCP_FIELDS = {"timestamp", "name", "status"}
@@ -359,6 +378,21 @@ def build_manifest(root: Path) -> dict[str, Any]:
                 "sha256": _sha256(path),
                 "bytes": path.stat().st_size,
                 "produced_by": PRODUCING_COMMANDS.get(rel, "source code / hand-written"),
+                "last_commit": _last_commit(root, rel),
+            }
+        )
+    listed = {a["path"] for a in artifacts}
+    for rel, command in EXTRA_ARTIFACTS.items():
+        path = root / rel
+        if rel in listed or not path.is_file():
+            continue
+        artifacts.append(
+            {
+                "path": rel,
+                "section": "supporting",
+                "sha256": _sha256(path),
+                "bytes": path.stat().st_size,
+                "produced_by": command,
                 "last_commit": _last_commit(root, rel),
             }
         )
