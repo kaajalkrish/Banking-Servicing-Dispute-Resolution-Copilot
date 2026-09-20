@@ -6,11 +6,17 @@ account-servicing, dispute, product-info) over a custom MCP server, grounded in
 policy and instrumented for observability, cost governance, security, compliance
 and evaluation. **Gemini is the only model provider. No Docker, no external DB.**
 
-> Status: Phases 1-5 are complete (foundation, context/memory/RAG,
-> observability, security & guardrails, evaluation & cost governance). Phase 6
-> adds the governance pack (`docs/`), an optional streaming API and the
-> submission verifiers; see "What is not done" at the end for anything still
-> pending.
+> Status: all six phases are built. See "What is not done" at the end for the
+> items that are deliberately deferred or still open.
+
+| Phase | Branch | Delivers |
+|---|---|---|
+| 1 | `phase-1/foundation-graph-mcp` | Synthetic data, MCP server, LangGraph graph, CLI |
+| 2 | `phase-2/context-memory-rag` | Context engineering, tiered memory, agentic RAG |
+| 3 | `phase-3/observability-tracing` | Phoenix tracing, tool log, trace export |
+| 4 | `phase-4/security-guardrails-audit` | Guardrails, audit trail, Presidio, red-team, scanners |
+| 5 | `phase-5/evaluation-cost-governance` | DeepEval, golden signals and cost, failure analysis, dashboard |
+| 6 | `phase-6/governance-delivery-bonus` | Governance pack, streaming API bonus, verifiers, delivery runbook |
 
 ## The two commands
 
@@ -381,8 +387,10 @@ liveness without a model call. **There is no authentication:** the endpoint
 trusts the `customer_id` it is sent, so it binds to loopback by default and
 must not be exposed (`docs/security-approach.md`).
 
-`python scripts/demo_api.py` starts the server on a free port, streams three
-sample conversations and writes a masked run log to `logs/api_demo.log`. It
+`python scripts/demo_api.py` starts the server on a free port, streams sample
+conversations (default three; the committed log used `conv-balance` and
+`conv-injection`) and writes a masked run log to `logs/api_demo.log`, with each
+event's arrival offset in milliseconds. It
 isolates the server's logs and state under `artifacts_regen/api_demo/`, so it
 does not touch the committed evidence.
 
@@ -406,10 +414,10 @@ document authored from evidence the code produced.
 | `src/guardrails/`, `.env.example`, `.gitignore` | Source code; `python scripts/check_secrets.py`, `python scripts/scan_evidence_for_pii.py` |
 | `reports/redteam_results.json`, `docs/redteam-results.md` | `python -m src.cli redteam` |
 | `docs/risk-register.md`, `docs/model-card.md`, `docs/compliance.md` | Hand-written; checked by `python scripts/verify_citations.py` |
-| `docs/output-risk.md`, `reports/output_risk_sample.json` | **Pending:** the sample needs a live run (`python scripts/output_risk_sample.py`, not yet written or run) |
+| `docs/output-risk.md`, `reports/output_risk_sample.json` | Sample: `python scripts/output_risk_sample.py` (no model call: joins the real answers in the eval report with the real tiers in the audit trail); document hand-written from it |
 | `reports/eval_report.json`, `src/evaluation/harness.py` | `python -m src.cli eval --out reports/eval_report.json`. The committed file has the same content as `eval_report_initial.json`: the run made **before** the three fixes in `docs/failure-analysis.md` (accuracy 0.6); it has not been re-scored |
 | `tests/test_routing.py`, `tests/test_loops.py`, `tests/test_tool_contracts.py` | `pytest -q -m "not live"` |
-| `src/api/` (bonus), `logs/api_demo.log` | `python -m src.api`; `python scripts/demo_api.py` (the committed log needs a live run) |
+| `src/api/` (bonus), `logs/api_demo.log` | `python -m src.api`; `python scripts/demo_api.py --conversations conv-balance,conv-injection` (live Gemini calls) |
 
 ## Git workflow
 
@@ -426,14 +434,15 @@ teammates credited on every commit (one as author, the other as the final
 
 ## What is not done
 
-- **Output-risk sample and document** (`docs/output-risk.md`,
-  `reports/output_risk_sample.json`): need a live run; not yet produced.
-- **API demo log** (`logs/api_demo.log`): the script exists; a live run has not
-  been committed.
 - **Optimization note** (baseline vs. optimized profile): ref-doc §8.1
   Good-to-Have, deferred; not started.
-- **Re-scoring after the three fixes:** the committed evaluation predates
-  them.
+- **Re-scoring after the three fixes:** the committed evaluation (accuracy 0.6)
+  predates the FA-01 to FA-03 fixes and has not been re-run.
+- **Fresh-clone reproducibility script** (plan.md P6-15/16): skipped; it is not
+  required by the brief and would cost real Gemini quota. The documented
+  `regenerate` command is the reproducibility path.
+- **Git-merge verification** (`python scripts/verify_submission.py --check-git-merges`):
+  runs on the remote after the pull-request merges (`docs/delivery-runbook.md`).
 - Real authentication, consent and data-principal rights, and other gaps are
   listed in `docs/compliance.md` and `docs/security-approach.md`.
 

@@ -31,6 +31,9 @@ STATUS.md
 *.zip
 *.bundle
 
+# local AI-assistant tooling state (never part of the submission)
+.claude/
+
 # editors / OS
 .idea/
 .vscode/
