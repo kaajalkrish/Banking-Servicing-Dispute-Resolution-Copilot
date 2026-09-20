@@ -1,0 +1,142 @@
+{
+  "tier_rules": {
+    "low": "cited policy information and clarifying questions (product_info, intake); also refusals from the input guard",
+    "medium": "account-specific masked data (account_servicing)",
+    "high": "dispute outcomes and any human escalation (dispute, escalate_human): always gated to human review",
+    "source": "src/guardrails/output_risk.py (classify_and_gate)"
+  },
+  "audit_trail_totals": {
+    "finalize_records": 82,
+    "by_tier": {
+      "low": 30,
+      "medium": 27,
+      "high": 25
+    },
+    "by_tier_and_review_flag": {
+      "high/human_review=True": 25,
+      "low/human_review=False": 23,
+      "low/human_review=True": 7,
+      "medium/human_review=False": 27
+    }
+  },
+  "eval_linked_cases": 27,
+  "excluded_cases": [
+    {
+      "case_id": "g-amb-001",
+      "reason": "the recorded answer is the recursion-limit fallback, so the audit tier belongs to a different, discarded answer (FA-03)"
+    },
+    {
+      "case_id": "g-pol-002",
+      "reason": "the recorded answer is the recursion-limit fallback, so the audit tier belongs to a different, discarded answer (FA-03)"
+    },
+    {
+      "case_id": "g-pol-007",
+      "reason": "the recorded answer is the recursion-limit fallback, so the audit tier belongs to a different, discarded answer (FA-03)"
+    }
+  ],
+  "examples": {
+    "low": [
+      {
+        "case_id": "g-abs-001",
+        "category": "abstention",
+        "run_id": "run-8be8310a-bc6e-481d-b034-e6d7d550811d",
+        "worker": "product_info",
+        "tier": "low",
+        "requires_human_review": true,
+        "gate": "flagged for human review (worker or guard requested it)",
+        "guard_actions": [],
+        "answer_excerpt": "I don't have information about that in our policy documentation, so I don't want to guess. I can connect you with a servicing agent who can help, or you can ask about fees, disputes, transfers, cards, statements, account types or KYC."
+      },
+      {
+        "case_id": "g-abs-002",
+        "category": "abstention",
+        "run_id": "run-616e9df2-1573-4701-be58-d8b791684cee",
+        "worker": "product_info",
+        "tier": "low",
+        "requires_human_review": false,
+        "gate": "released to the customer",
+        "guard_actions": [],
+        "answer_excerpt": "No, you cannot buy cryptocurrency through this bank. The bank does not offer cryptocurrency wallets [POL-ACCOUNT-TYPES §Account Types Not Offered]."
+      },
+      {
+        "case_id": "g-amb-002",
+        "category": "ambiguous",
+        "run_id": "run-25c24cb4-deb3-4fab-a12f-3705ed3160dd",
+        "worker": "intake",
+        "tier": "low",
+        "requires_human_review": false,
+        "gate": "released to the customer",
+        "guard_actions": [],
+        "answer_excerpt": "I'm sorry to hear that. To help you best, could you clarify if you are seeing an unexpected transaction, have a question about a fee, or need help with something else like a balance or service request?"
+      }
+    ],
+    "medium": [
+      {
+        "case_id": "g-bal-001",
+        "category": "account_balance",
+        "run_id": "run-3898e87e-5c39-4822-b708-cda568e409da",
+        "worker": "account_servicing",
+        "tier": "medium",
+        "requires_human_review": false,
+        "gate": "released to the customer",
+        "guard_actions": [],
+        "answer_excerpt": "Your checking account (****1945) has a current balance of $3,023.36 USD. The account status is active."
+      },
+      {
+        "case_id": "g-bal-002",
+        "category": "account_balance",
+        "run_id": "run-13fb9a8b-b090-40ad-a4e3-f1710e1bd06c",
+        "worker": "account_servicing",
+        "tier": "medium",
+        "requires_human_review": false,
+        "gate": "released to the customer",
+        "guard_actions": [],
+        "answer_excerpt": "You have multiple accounts ending in 9032 and 2676. Please specify which checking account you would like to check the balance for."
+      }
+    ],
+    "high": [
+      {
+        "case_id": "g-dsp-001",
+        "category": "dispute_intake",
+        "run_id": "run-f635be67-64eb-4059-8ffd-d5dc5b26cf8e",
+        "worker": "dispute",
+        "tier": "high",
+        "requires_human_review": true,
+        "gate": "gated: human review (high-risk tier is always gated)",
+        "guard_actions": [],
+        "answer_excerpt": "I can help raise a dispute. Which transaction is it? Please share the transaction id (e.g. TXN0001234) or the date, amount and merchant."
+      },
+      {
+        "case_id": "g-dsp-002",
+        "category": "dispute_intake",
+        "run_id": "run-ecc5dd98-8c0c-4017-a4f7-305f49618dc0",
+        "worker": "dispute",
+        "tier": "high",
+        "requires_human_review": true,
+        "gate": "gated: human review (high-risk tier is always gated)",
+        "guard_actions": [],
+        "answer_excerpt": "I have noted your report regarding the duplicate Uber charge. \n\nOur records indicate that a dispute for this transaction (TXN0000011) has already been drafted under **Dispute ID: DSP01001**. \n\nRegarding your eligibility, this case remains w"
+      },
+      {
+        "case_id": "g-pol-008",
+        "category": "policy_question",
+        "run_id": "run-8de05c1e-f4db-4e92-ac1c-c33df6b6704d",
+        "worker": "escalate_human",
+        "tier": "high",
+        "requires_human_review": true,
+        "gate": "gated: human review (high-risk tier is always gated)",
+        "guard_actions": [],
+        "answer_excerpt": "This request needs a human banking agent. I've noted your request and a human agent will follow up. Is there anything else I can help you with in the meantime?"
+      }
+    ]
+  },
+  "integrity": {
+    "logged_tier_matches_classifier": true,
+    "mismatched_run_ids": []
+  },
+  "generated_at": "2026-09-20T02:44:59+00:00",
+  "sources": {
+    "reports\\eval_report.json": "ee39804d246543653f8836549adc4fc88eefddb8950c62f648bb5cfcd6445f36",
+    "logs\\agent_actions.jsonl": "83ec4fc3302eacc38f91ddd3a4fec1cfb44d6caa6b9c77e1bc10f90bf0c31f2a"
+  }
+}
