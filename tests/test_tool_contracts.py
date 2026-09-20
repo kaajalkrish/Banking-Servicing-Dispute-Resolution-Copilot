@@ -101,6 +101,16 @@ def test_check_dispute_eligibility_output_shape():
     assert isinstance(out["explanation"], list)
 
 
+def test_get_dispute_status_output_shape():
+    dispute_id = next(iter(srv._bank._disputes))  # a seeded dispute
+    out = srv.get_dispute_status(dispute_id)
+    assert {"dispute_id", "transaction_id", "reason", "status", "opened_date"} <= set(out)
+    assert out["dispute_id"] == dispute_id
+    assert isinstance(out["status"], str)
+    # never an account or card number in the output
+    assert "card_number" not in out and "account_number" not in out
+
+
 # --- error paths (structured error objects, not exceptions) ---
 
 def test_error_unknown_dispute():
