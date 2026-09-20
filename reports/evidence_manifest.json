@@ -1,0 +1,623 @@
+{
+  "git_head": "e698534",
+  "artifact_count": 40,
+  "artifacts": [
+    {
+      "path": "src/graph.py",
+      "section": "7.1",
+      "sha256": "6972f36a4b256818706de7c0884c910fa12c835d08304b2a08ac96f46d9cd01c",
+      "bytes": 14168,
+      "produced_by": "source code / hand-written",
+      "last_commit": "6d013f2"
+    },
+    {
+      "path": "logs/mcp_transcript.jsonl",
+      "section": "7.1",
+      "sha256": "19eada9e17a6fec89cdd4336c514293c390d3c9b86c5b5ade71ef22ffb7c1b43",
+      "bytes": 34715,
+      "produced_by": "python -m src.cli mcp-demo",
+      "last_commit": "a75b092"
+    },
+    {
+      "path": "tests/test_memory_persistence.py",
+      "section": "7.1",
+      "sha256": "7542b523b5e674add9cc788df58bf0493cf58e3daaded5be748e683ecfa02942",
+      "bytes": 6660,
+      "produced_by": "source code / hand-written",
+      "last_commit": "e44defc"
+    },
+    {
+      "path": "logs/memory_test.log",
+      "section": "7.1",
+      "sha256": "370072f214c158ca6643bd5c316ed13c98c7e9900bd8b5e4e571ec28478160e1",
+      "bytes": 476,
+      "produced_by": "pytest tests/test_memory_persistence.py -m live -q",
+      "last_commit": "9cc7763"
+    },
+    {
+      "path": "src/tools/rag_tool.py",
+      "section": "7.1",
+      "sha256": "9cd75687a17b7d052f731f5043d806d46f90a1d5ef58dbb46a5eeddd13e25423",
+      "bytes": 9952,
+      "produced_by": "source code / hand-written",
+      "last_commit": "0a6f5e4"
+    },
+    {
+      "path": "src/observability/tracing.py",
+      "section": "7.2",
+      "sha256": "ad091b8747023a3a287d7ff9a7132cf4fb21f3c9b56b1d9d47bece4b1502d86a",
+      "bytes": 4970,
+      "produced_by": "source code / hand-written",
+      "last_commit": "3ca62e1"
+    },
+    {
+      "path": "traces/phoenix_spans.parquet",
+      "section": "7.2",
+      "sha256": "4598cd6334097c313cf32d0761bc2c5f93bea63a032dc08e65ba2f731ca3cc10",
+      "bytes": 11539839,
+      "produced_by": "python -m src.cli export --parquet traces/phoenix_spans.parquet",
+      "last_commit": "8fa8373"
+    },
+    {
+      "path": "logs/tool_calls.jsonl",
+      "section": "7.2",
+      "sha256": "32fe3fa67641eefabdae3b95d344ddcbd22d3c84504ef17fda93db6b95c24823",
+      "bytes": 102434,
+      "produced_by": "python -m src.cli regenerate --traces --commit-evidence",
+      "last_commit": "a75b092"
+    },
+    {
+      "path": "docs/failure-analysis.md",
+      "section": "7.2",
+      "sha256": "b3aed5637510ac56df9eb69bedad2f8fd859ad3547abb4ffb69315a51319a1e9",
+      "bytes": 6802,
+      "produced_by": "hand-written from Phoenix traces; checked by python scripts/verify_citations.py",
+      "last_commit": "23e0d3c"
+    },
+    {
+      "path": "reports/golden_signals.json",
+      "section": "7.3",
+      "sha256": "5bb2c267affac097a0940e35a19f61b227e634ebea9cba6e3e6b79b877dcd492",
+      "bytes": 1359,
+      "produced_by": "python -m src.observability.golden_signals --eval reports/eval_report_initial.json --out reports/golden_signals.json",
+      "last_commit": "65cbcbe"
+    },
+    {
+      "path": "src/observability/golden_signals.py",
+      "section": "7.3",
+      "sha256": "8485bd47059f4b3b2c2ca14965cd4954af9517d89c7d123804f0980397ba1b20",
+      "bytes": 5934,
+      "produced_by": "source code / hand-written",
+      "last_commit": "c459b5d"
+    },
+    {
+      "path": "reports/dashboard.png",
+      "section": "7.3",
+      "sha256": "c174225845772f97eecaa278c0e21e9b799ac74cac1378a67f164965f6e0cf8d",
+      "bytes": 279076,
+      "produced_by": "screenshot of the local Phoenix UI (python -m src.cli regenerate --traces --keep-ui)",
+      "last_commit": "687ef18"
+    },
+    {
+      "path": "reports/dashboard_data.csv",
+      "section": "7.3",
+      "sha256": "4916860970feae77ac2a09b0b80d14e86fc2c25e1c27fb489285af34ee0dc9a0",
+      "bytes": 96423099,
+      "produced_by": "python -m src.cli export --csv reports/dashboard_data.csv",
+      "last_commit": "1e879cf"
+    },
+    {
+      "path": "logs/agent_actions.jsonl",
+      "section": "7.4",
+      "sha256": "83ec4fc3302eacc38f91ddd3a4fec1cfb44d6caa6b9c77e1bc10f90bf0c31f2a",
+      "bytes": 26457,
+      "produced_by": "python -m src.cli regenerate --traces --commit-evidence",
+      "last_commit": "a75b092"
+    },
+    {
+      "path": ".env.example",
+      "section": "7.4",
+      "sha256": "517bf9e1dce8fdfdae39585c3f620a64364e9fdcafd088cbd9d4df7707569db6",
+      "bytes": 1362,
+      "produced_by": "source code / hand-written",
+      "last_commit": "c5aaeb6"
+    },
+    {
+      "path": ".gitignore",
+      "section": "7.4",
+      "sha256": "9a2f28903b18ea5279847b35b2e27cf7e12e223420faf3c7427142ea2a05a369",
+      "bytes": 410,
+      "produced_by": "source code / hand-written",
+      "last_commit": "cf9f14d"
+    },
+    {
+      "path": "docs/risk-register.md",
+      "section": "7.5",
+      "sha256": "552e9e5b0f58cad75d26115ccfb5f40c46b10e26e39041baf086c9bb25b46824",
+      "bytes": 12428,
+      "produced_by": "hand-written; checked by python scripts/verify_citations.py",
+      "last_commit": "67ec745"
+    },
+    {
+      "path": "docs/model-card.md",
+      "section": "7.5",
+      "sha256": "9c1f33d325a8f564577cee5753676aecc0e0ff5ba12acfcc039138d27cd0c816",
+      "bytes": 9313,
+      "produced_by": "hand-written; checked by python scripts/verify_citations.py",
+      "last_commit": "67ec745"
+    },
+    {
+      "path": "docs/compliance.md",
+      "section": "7.5",
+      "sha256": "b3fa0515287bf2313f0dafeb6c146e4b162b22a0e55fdaf29fe1c7d6f8483692",
+      "bytes": 15171,
+      "produced_by": "hand-written; checked by python scripts/verify_citations.py",
+      "last_commit": "1a52a8c"
+    },
+    {
+      "path": "docs/output-risk.md",
+      "section": "7.5",
+      "sha256": "cc3a643878581f42e990973f3f9ca15055d21b5168fe0cf2d553b005f4a7854c",
+      "bytes": 6906,
+      "produced_by": "hand-written from reports/output_risk_sample.json",
+      "last_commit": "d70d119"
+    },
+    {
+      "path": "reports/eval_report.json",
+      "section": "7.6",
+      "sha256": "ee39804d246543653f8836549adc4fc88eefddb8950c62f648bb5cfcd6445f36",
+      "bytes": 65236,
+      "produced_by": "python -m src.cli eval --out reports/eval_report.json",
+      "last_commit": "958ff8f"
+    },
+    {
+      "path": "src/evaluation/harness.py",
+      "section": "7.6",
+      "sha256": "e94af0e6340fc1234d98c050e2e52ca7f007fb67cd4634972f4e7d3c2958452d",
+      "bytes": 17667,
+      "produced_by": "source code / hand-written",
+      "last_commit": "9554cd8"
+    },
+    {
+      "path": "tests/test_routing.py",
+      "section": "7.6",
+      "sha256": "3608e2b161e3c9a356eb51de7dc895106b82402bfe87c911ec1fce43c6abc10b",
+      "bytes": 2493,
+      "produced_by": "source code / hand-written",
+      "last_commit": "992493b"
+    },
+    {
+      "path": "tests/test_loops.py",
+      "section": "7.6",
+      "sha256": "65294eafc51decca113801aca41ae90300e815e78290a6e36e8fc4f993a7de92",
+      "bytes": 3503,
+      "produced_by": "source code / hand-written",
+      "last_commit": "d815009"
+    },
+    {
+      "path": "tests/test_tool_contracts.py",
+      "section": "7.6",
+      "sha256": "e38faa2fe0d6c63d0b91c7a8262880866db5736dfee52e45e9c73bf8b4217739",
+      "bytes": 7297,
+      "produced_by": "source code / hand-written",
+      "last_commit": "5a22535"
+    },
+    {
+      "path": "README.md",
+      "section": "7.7",
+      "sha256": "52b8f24dd60eeb4079942ce3aba33116cb2d642c5e22e43f275af1dc845b9585",
+      "bytes": 25496,
+      "produced_by": "source code / hand-written",
+      "last_commit": "9d42013"
+    },
+    {
+      "path": "reports/eval_report_initial.json",
+      "section": "supporting",
+      "sha256": "ee39804d246543653f8836549adc4fc88eefddb8950c62f648bb5cfcd6445f36",
+      "bytes": 65236,
+      "produced_by": "GEMINI_MODEL=gemini-3.1-flash-lite ... python -m src.cli eval --limit 30 --out reports/eval_report_initial.json",
+      "last_commit": "a75b092"
+    },
+    {
+      "path": "reports/output_risk_sample.json",
+      "section": "supporting",
+      "sha256": "1db206f49d676d63903cd21291a4543b830f51273dcc478d1bc222281d9ad823",
+      "bytes": 6140,
+      "produced_by": "python scripts/output_risk_sample.py",
+      "last_commit": "5e05d1b"
+    },
+    {
+      "path": "logs/api_demo.log",
+      "section": "supporting",
+      "sha256": "46e71b1709aa89ee1e4e268dd644deb0ec72b082fb939fcee097e822a3545dcb",
+      "bytes": 3054,
+      "produced_by": "python scripts/demo_api.py --conversations conv-balance,conv-injection",
+      "last_commit": "507c98d"
+    },
+    {
+      "path": "reports/citation_check.json",
+      "section": "supporting",
+      "sha256": "87daf4a78a5f3120ae9702cddeff1bb45fe3d84fb4e2c87fd8d75c43ba59e12b",
+      "bytes": 367,
+      "produced_by": "python scripts/verify_citations.py",
+      "last_commit": "6c4fcc2"
+    },
+    {
+      "path": "reports/tool_reconciliation.json",
+      "section": "supporting",
+      "sha256": "ef2215a279be92223b06b3804e7cc73066b68dadb09182feaae0ad23ecbd3b3c",
+      "bytes": 591,
+      "produced_by": "python scripts/verify_tool_names.py",
+      "last_commit": "1672520"
+    },
+    {
+      "path": "reports/redteam_results.json",
+      "section": "supporting",
+      "sha256": "e5d7acd2e5a4b50118b8240bb7d5a7da82cca9459b5f2127afbc3b551057e25f",
+      "bytes": 34445,
+      "produced_by": "python -m src.cli redteam",
+      "last_commit": "b2bba62"
+    },
+    {
+      "path": "docs/redteam-results.md",
+      "section": "supporting",
+      "sha256": "1f9ba4c0820bcfb5fde695a1ad2847a4e43c2cb3f545a1e5fdffd4cad33156dd",
+      "bytes": 6573,
+      "produced_by": "python -m src.cli redteam",
+      "last_commit": "b2bba62"
+    },
+    {
+      "path": "reports/pii_redaction_sample.json",
+      "section": "supporting",
+      "sha256": "74f4f3b26b3e830ccb3152bb462ab9e4d253faa1060747928df19f9af5708ef4",
+      "bytes": 2629,
+      "produced_by": "python scripts/pii_redaction_sample.py",
+      "last_commit": "314d4a1"
+    },
+    {
+      "path": "reports/secrets_scan.json",
+      "section": "supporting",
+      "sha256": "5faafd7806f5da4a3e823c3bb6e86ec47939cee62fb8c188a8e9ffefb705958d",
+      "bytes": 102,
+      "produced_by": "python scripts/check_secrets.py",
+      "last_commit": "314d4a1"
+    },
+    {
+      "path": "reports/pii_scan.json",
+      "section": "supporting",
+      "sha256": "a754b01a5ff898fd8c192b23f412d81d1d5076fbc4ff08b0c5f71c453a7fd7fc",
+      "bytes": 264,
+      "produced_by": "python scripts/scan_evidence_for_pii.py",
+      "last_commit": "5b19a1c"
+    },
+    {
+      "path": "docs/control-catalog.md",
+      "section": "supporting",
+      "sha256": "861e6f3149344ccc7bcaa5bc9d95bc871c9e311385305c7d298ad3c51fe8a777",
+      "bytes": 5402,
+      "produced_by": "hand-written; checked by python scripts/verify_citations.py",
+      "last_commit": "23e0d3c"
+    },
+    {
+      "path": "docs/architecture.md",
+      "section": "supporting",
+      "sha256": "d8c2ab34ad0a3ea4272de9f6d4a89ca0fd11c76c7097f902e6c5f80ff31f378c",
+      "bytes": 11976,
+      "produced_by": "hand-written",
+      "last_commit": "2cb893e"
+    },
+    {
+      "path": "docs/security-approach.md",
+      "section": "supporting",
+      "sha256": "c80a063b0d73bbd19d56cac60d135719135b37659d3779a0b5a2c61c38c9688c",
+      "bytes": 7939,
+      "produced_by": "hand-written; checked by python scripts/verify_citations.py",
+      "last_commit": "b1d8068"
+    },
+    {
+      "path": "docs/delivery-runbook.md",
+      "section": "supporting",
+      "sha256": "86e164b978a9c194b315ddaecd8aa9b4207d98505110608bab008785878414f7",
+      "bytes": 17607,
+      "produced_by": "hand-written",
+      "last_commit": "20942aa"
+    }
+  ],
+  "checks": [
+    {
+      "section": "7.1",
+      "name": "path src/graph.py",
+      "ok": true,
+      "detail": "14168 bytes"
+    },
+    {
+      "section": "7.1",
+      "name": "path mcp_server",
+      "ok": true,
+      "detail": "3 non-empty file(s)"
+    },
+    {
+      "section": "7.1",
+      "name": "path logs/mcp_transcript.jsonl",
+      "ok": true,
+      "detail": "34715 bytes"
+    },
+    {
+      "section": "7.1",
+      "name": "path src/context",
+      "ok": true,
+      "detail": "6 non-empty file(s)"
+    },
+    {
+      "section": "7.1",
+      "name": "path src/memory",
+      "ok": true,
+      "detail": "2 non-empty file(s)"
+    },
+    {
+      "section": "7.1",
+      "name": "path tests/test_memory_persistence.py",
+      "ok": true,
+      "detail": "6660 bytes"
+    },
+    {
+      "section": "7.1",
+      "name": "path logs/memory_test.log",
+      "ok": true,
+      "detail": "476 bytes"
+    },
+    {
+      "section": "7.1",
+      "name": "path src/tools/rag_tool.py",
+      "ok": true,
+      "detail": "9952 bytes"
+    },
+    {
+      "section": "7.1",
+      "name": "path data/policy_corpus",
+      "ok": true,
+      "detail": "12 non-empty file(s)"
+    },
+    {
+      "section": "7.2",
+      "name": "path src/observability/tracing.py",
+      "ok": true,
+      "detail": "4970 bytes"
+    },
+    {
+      "section": "7.2",
+      "name": "path traces/phoenix_spans.parquet",
+      "ok": true,
+      "detail": "11539839 bytes"
+    },
+    {
+      "section": "7.2",
+      "name": "path logs/tool_calls.jsonl",
+      "ok": true,
+      "detail": "102434 bytes"
+    },
+    {
+      "section": "7.2",
+      "name": "path docs/failure-analysis.md",
+      "ok": true,
+      "detail": "6802 bytes"
+    },
+    {
+      "section": "7.3",
+      "name": "path reports/golden_signals.json",
+      "ok": true,
+      "detail": "1359 bytes"
+    },
+    {
+      "section": "7.3",
+      "name": "path src/observability/golden_signals.py",
+      "ok": true,
+      "detail": "5934 bytes"
+    },
+    {
+      "section": "7.3",
+      "name": "path reports/dashboard.png",
+      "ok": true,
+      "detail": "279076 bytes"
+    },
+    {
+      "section": "7.3",
+      "name": "path reports/dashboard_data.csv",
+      "ok": true,
+      "detail": "96423099 bytes"
+    },
+    {
+      "section": "7.4",
+      "name": "path src/guardrails",
+      "ok": true,
+      "detail": "7 non-empty file(s)"
+    },
+    {
+      "section": "7.4",
+      "name": "path logs/agent_actions.jsonl",
+      "ok": true,
+      "detail": "26457 bytes"
+    },
+    {
+      "section": "7.4",
+      "name": "path .env.example",
+      "ok": true,
+      "detail": "1362 bytes"
+    },
+    {
+      "section": "7.4",
+      "name": "path .gitignore",
+      "ok": true,
+      "detail": "410 bytes"
+    },
+    {
+      "section": "7.5",
+      "name": "path docs/risk-register.md",
+      "ok": true,
+      "detail": "12428 bytes"
+    },
+    {
+      "section": "7.5",
+      "name": "path docs/model-card.md",
+      "ok": true,
+      "detail": "9313 bytes"
+    },
+    {
+      "section": "7.5",
+      "name": "path docs/compliance.md",
+      "ok": true,
+      "detail": "15171 bytes"
+    },
+    {
+      "section": "7.5",
+      "name": "path docs/output-risk.md",
+      "ok": true,
+      "detail": "6906 bytes"
+    },
+    {
+      "section": "7.6",
+      "name": "path reports/eval_report.json",
+      "ok": true,
+      "detail": "65236 bytes"
+    },
+    {
+      "section": "7.6",
+      "name": "path src/evaluation/harness.py",
+      "ok": true,
+      "detail": "17667 bytes"
+    },
+    {
+      "section": "7.6",
+      "name": "path tests/test_routing.py",
+      "ok": true,
+      "detail": "2493 bytes"
+    },
+    {
+      "section": "7.6",
+      "name": "path tests/test_loops.py",
+      "ok": true,
+      "detail": "3503 bytes"
+    },
+    {
+      "section": "7.6",
+      "name": "path tests/test_tool_contracts.py",
+      "ok": true,
+      "detail": "7297 bytes"
+    },
+    {
+      "section": "7.7",
+      "name": "path README.md",
+      "ok": true,
+      "detail": "25496 bytes"
+    },
+    {
+      "section": "7.7",
+      "name": "path src/api",
+      "ok": true,
+      "detail": "3 non-empty file(s)"
+    },
+    {
+      "section": "7.2",
+      "name": "jsonl logs/tool_calls.jsonl",
+      "ok": true,
+      "detail": "81 records with all required fields"
+    },
+    {
+      "section": "7.4",
+      "name": "jsonl logs/agent_actions.jsonl",
+      "ok": true,
+      "detail": "86 records with all required fields"
+    },
+    {
+      "section": "7.1",
+      "name": "jsonl logs/mcp_transcript.jsonl",
+      "ok": true,
+      "detail": "52 records with all required fields"
+    },
+    {
+      "section": "7.2",
+      "name": "traces parquet coverage",
+      "ok": true,
+      "detail": "6810 spans, 44 distinct names"
+    },
+    {
+      "section": "7.3",
+      "name": "golden_signals keys",
+      "ok": true,
+      "detail": "latency split, tokens, cost, accuracy, hallucination_rate present"
+    },
+    {
+      "section": "7.6",
+      "name": "eval_report keys",
+      "ok": true,
+      "detail": "30 cases, Gemini judge, all metrics present"
+    },
+    {
+      "section": "7.6",
+      "name": "tests tests/test_routing.py",
+      "ok": true,
+      "detail": "4 test function(s)"
+    },
+    {
+      "section": "7.6",
+      "name": "tests tests/test_loops.py",
+      "ok": true,
+      "detail": "4 test function(s)"
+    },
+    {
+      "section": "7.6",
+      "name": "tests tests/test_tool_contracts.py",
+      "ok": true,
+      "detail": "13 test function(s)"
+    },
+    {
+      "section": "7.5",
+      "name": "governance docs/risk-register.md",
+      "ok": true,
+      "detail": "required sections present"
+    },
+    {
+      "section": "7.5",
+      "name": "governance docs/model-card.md",
+      "ok": true,
+      "detail": "required sections present"
+    },
+    {
+      "section": "7.5",
+      "name": "governance docs/compliance.md",
+      "ok": true,
+      "detail": "required sections present"
+    },
+    {
+      "section": "7.5",
+      "name": "governance docs/output-risk.md",
+      "ok": true,
+      "detail": "required sections present"
+    },
+    {
+      "section": "3.4",
+      "name": "citations resolve",
+      "ok": true,
+      "detail": "6 docs, 25 controls"
+    },
+    {
+      "section": "7.4",
+      "name": "secrets scan",
+      "ok": true,
+      "detail": "clean"
+    },
+    {
+      "section": "7.4",
+      "name": "evidence PII scan",
+      "ok": true,
+      "detail": "clean"
+    },
+    {
+      "section": "6.2",
+      "name": "no Docker/compose files",
+      "ok": true,
+      "detail": "none tracked"
+    }
+  ],
+  "ok": true
+}
