@@ -2,8 +2,9 @@
 
 Reads a Phoenix project's spans, computes p50/p95 latency split by
 thinking/acting/tool (D-05, src/observability/span_types.py), token totals
-from LLM spans, a cost estimate (src/observability/pricing.py -- omitted,
-not fabricated, if prices aren't confirmed yet per M-3), an error rate and
+from LLM spans, a cost estimate (src/observability/pricing.py -- published
+list prices with source URL and date; omitted, not fabricated, for any model
+without a confirmed price), an error rate and
 request count, and imports accuracy + hallucination_rate from an already-
 produced eval report (reports/eval_report.json by default). Writes
 reports/golden_signals.json.
@@ -22,7 +23,13 @@ from typing import Any
 import pandas as pd
 
 from src.observability.export import get_all_spans
-from src.observability.pricing import PriceNotConfirmedError, estimate_cost_usd
+from src.observability.pricing import (
+    CONFIRMED_ON,
+    PRICE_BASIS,
+    SOURCE_URL,
+    PriceNotConfirmedError,
+    estimate_cost_usd,
+)
 from src.observability.span_types import classify_span_kind
 
 
@@ -85,7 +92,14 @@ def _cost_usd(df: pd.DataFrame, token_totals: dict[str, int]) -> dict[str, Any]:
             "models": models,
             "per_model_usd": per_model or None,
         }
-    return {"total_usd": total, "per_model_usd": per_model, "models": models}
+    return {
+        "total_usd": total,
+        "per_model_usd": per_model,
+        "models": models,
+        "price_source_url": SOURCE_URL,
+        "prices_confirmed_on": CONFIRMED_ON,
+        "basis": PRICE_BASIS,
+    }
 
 
 def _error_rate(df: pd.DataFrame) -> dict[str, Any]:
