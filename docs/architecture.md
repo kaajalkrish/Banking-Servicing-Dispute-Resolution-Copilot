@@ -152,6 +152,37 @@ rate) are computed by `src/observability/golden_signals.py` (CTL-24); the
 DeepEval harness (`src/evaluation/harness.py`, CTL-23) scores the golden set
 with a Gemini judge.
 
+## 5a. Streaming API (optional bonus)
+
+A backend HTTP endpoint, not a web UI: `python -m src.api` serves
+`POST /chat/stream` (server-sent events for one customer turn) and
+`GET /health` (liveness, no model call). It builds the same compiled graph as
+the CLI, so the input guard, output guard, risk gate, tool-scope gateway,
+tracing and audit apply unchanged (`src/api/app.py`, `src/api/streaming.py`).
+
+| Event | Content |
+|---|---|
+| `start` | `run_id`, `thread_id` and the AI disclosure (CTL-26) |
+| `progress` | `{"node": <name>}` as each graph node finishes |
+| `error` | Only on failure: a fixed error type, never an exception string |
+| `final` | The answer after the output guard and risk gate |
+
+Design decisions:
+
+- **Only node names stream mid-turn, never node content.** A worker draft has
+  not yet passed `finalize`'s output guard and human-review gate, so streaming
+  it would bypass them.
+- **Thread ids are prefixed with the customer id**, so a client-chosen thread id
+  cannot load another customer's checkpointed history.
+- **Failures degrade to a safe, escalated `final` answer** (recursion limit,
+  per-turn timeout, any other error), as the CLI does.
+- **No authentication.** The endpoint trusts the `customer_id` it is given, like
+  the CLI's `--customer-id`, and binds to loopback by default
+  (`docs/security-approach.md`).
+
+`scripts/demo_api.py` drives it end to end; the committed run is
+`logs/api_demo.log`.
+
 ## 6. Memory tiers (§7.1 Tiered memory)
 
 | Tier | Backing | Module | Scope |

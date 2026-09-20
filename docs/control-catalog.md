@@ -36,3 +36,4 @@
 | CTL-23 | Golden-set evaluation (accuracy, hallucination, faithfulness, relevancy) | `src/evaluation/harness.py` (`run_eval`); `src/evaluation/gemini_judge.py` (`GeminiJudge`) | `reports/eval_report.json` |
 | CTL-24 | Golden-signals / cost-latency computation | `src/observability/golden_signals.py` (`compute_golden_signals`) | `reports/golden_signals.json` |
 | CTL-25 | Draft-only dispute outcomes (never auto-commits money movement) | `src/agents/dispute.py` (always sets `requires_human_review=True`) | `docs/failure-analysis.md` (design rationale, D-13) |
+| CTL-26 | AI disclosure to the customer (CLI and streaming API) | `src/common/disclosure.py` (`AI_DISCLOSURE`); `src/cli.py` (`chat_banner`); `src/api/streaming.py` (`stream_turn`) | `tests/test_cli_disclosure.py`; `logs/api_demo.log` |

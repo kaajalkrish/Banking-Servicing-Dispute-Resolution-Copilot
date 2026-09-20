@@ -353,7 +353,7 @@ Written for a reviewer; every claim cites a control ID or a committed file.
 | Document | What it is |
 |---|---|
 | [`docs/architecture.md`](docs/architecture.md) | Final graph, trust boundaries, tool and MCP layout, model and library versions |
-| [`docs/control-catalog.md`](docs/control-catalog.md) | 25 controls with stable IDs (`CTL-01` ...), each with a code path and an evidence artifact |
+| [`docs/control-catalog.md`](docs/control-catalog.md) | 26 controls with stable IDs (`CTL-01` ...), each with a code path and an evidence artifact |
 | [`docs/risk-register.md`](docs/risk-register.md) | 17 risks (OWASP LLM Top 10 / NIST AI RMF) with likelihood, impact, mitigation, residual risk, owner |
 | [`docs/model-card.md`](docs/model-card.md) | Models, synthetic data, intended and out-of-scope use, human oversight, evaluation, limitations |
 | [`docs/compliance.md`](docs/compliance.md) | EU AI Act, NIST AI RMF and India DPDP Act mapped to controls, with status and gaps (not legal advice) |
