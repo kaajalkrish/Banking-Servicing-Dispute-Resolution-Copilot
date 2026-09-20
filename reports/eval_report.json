@@ -1,0 +1,886 @@
+{
+  "metadata": {
+    "timestamp": "2026-09-19T21:50:45.218084+00:00",
+    "git_commit": "95ac1c249f519da70af00a2a325d302f6761b0ca",
+    "dataset_path": "data\\golden_set\\golden.jsonl",
+    "dataset_sha256": "13bdffe07757f1adc367a7d7b0129b5de562dcb74cc450a43b0dcd75dc412c7b",
+    "worker_model": "gemini-3.1-flash-lite",
+    "judge_model": "gemini-3.1-flash-lite",
+    "scored": true,
+    "complete": true,
+    "package_versions": {
+      "deepeval": "4.2.3",
+      "langgraph": "1.2.11",
+      "langchain-google-genai": "4.4.0"
+    }
+  },
+  "metrics": {
+    "accuracy": 0.6,
+    "hallucination_rate": 0.0,
+    "faithfulness_mean": 0.9820827320827321,
+    "answer_relevancy_mean": 0.7415873015873016,
+    "pass_rate_by_category": {
+      "account_balance": 1.0,
+      "account_transactions": 0.3333333333333333,
+      "account_statement": 1.0,
+      "dispute_intake": 1.0,
+      "dispute_eligibility": 0.0,
+      "dispute_status": 0.0,
+      "policy_question": 0.5,
+      "abstention": 0.6666666666666666,
+      "ambiguous": 0.5
+    },
+    "case_count": 30,
+    "scored_for_hallucination_faithfulness": 27
+  },
+  "results": [
+    {
+      "id": "g-bal-001",
+      "category": "account_balance",
+      "customer_id": "C0001",
+      "input": "What is my current balance?",
+      "actual_output": "Your checking account (****1945) has a current balance of $3,023.36 USD. The account status is active.",
+      "context": [
+        "Your checking account (****1945) has a current balance of $3,023.36 USD. The account status is active."
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "answer",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-3898e87e-5c39-4822-b708-cda568e409da"
+      ],
+      "tags": [
+        "AC-01",
+        "balance"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response is perfectly relevant and directly addresses the user's inquiry with complete accuracy!",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-bal-002",
+      "category": "account_balance",
+      "customer_id": "C0002",
+      "input": "How much money do I have in my checking account?",
+      "actual_output": "You have multiple accounts ending in 9032 and 2676. Please specify which checking account you would like to check the balance for.",
+      "context": [
+        "You have multiple accounts ending in 9032 and 2676. Please specify which checking account you would like to check the balance for."
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "answer",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-13fb9a8b-b090-40ad-a4e3-f1710e1bd06c"
+      ],
+      "tags": [
+        "AC-01",
+        "balance"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response accurately identifies that it lacks access to your personal financial data, which is the correct and relevant way to address the query.",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-bal-003",
+      "category": "account_balance",
+      "customer_id": "C0002",
+      "input": "What's the balance on my savings account?",
+      "actual_output": "To provide you with the balance for your savings account, could you please specify which account you are inquiring about by providing the last 4 digits (9032 or 2676)?",
+      "context": [
+        "To provide you with the balance for your savings account, could you please specify which account you are inquiring about by providing the last 4 digits (9032 or 2676)?"
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "answer",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-44a393db-ebc7-47ed-9427-d2717ff0e51b"
+      ],
+      "tags": [
+        "AC-01",
+        "balance"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response is perfectly relevant and directly addresses the user's inquiry with clarity and precision. Great job!",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-txn-001",
+      "category": "account_transactions",
+      "customer_id": "C0001",
+      "input": "Show me my recent transactions.",
+      "actual_output": "Here are your 10 most recent transactions for account ending in 1945:\n\n*   **2026-08-22:** Costco (Fuel), $728.36 USD, Pending\n*   **2026-08-17:** Whole Foods (Groceries), £560.46 GBP, Posted\n*   **2026-08-13:** Costco (Dining), $872.85 USD, Posted\n*   **2026-08-01:** Uber (Retail), $92.78 USD, Pending\n*   **2026-08-01:** Uber (Retail), $92.78 USD, Pending (Duplicate of TXN0000011)\n*   **2026-07-28:** Netflix (Dining), $688.15 USD, Pending\n*   **2026-07-26:** Amazon (Utilities), $923.39 USD, Posted\n*   **2026-07-01:** XYZ*TECH (Fuel), $230.14 USD, Posted (Unrecognized)\n*   **2026-06-29:** Amazon (Dining), $800.14 USD, Posted\n*   **2026-06-23:** Spotify (Fuel), $404.00 USD, Posted",
+      "context": [
+        "Here are your 10 most recent transactions for account ending in 1945:\n\n*   **2026-08-22:** Costco (Fuel), $728.36 USD, Pending\n*   **2026-08-17:** Whole Foods (Groceries), £560.46 GBP, Posted\n*   **2026-08-13:** Costco (Dining), $872.85 USD, Posted\n*   **2026-08-01:** Uber (Retail), $92.78 USD, Pending\n*   **2026-08-01:** Uber (Retail), $92.78 USD, Pending (Duplicate of TXN0000011)\n*   **2026-07-28:** Netflix (Dining), $688.15 USD, Pending\n*   **2026-07-26:** Amazon (Utilities), $923.39 USD, Posted\n*   **2026-07-01:** XYZ*TECH (Fuel), $230.14 USD, Posted (Unrecognized)\n*   **2026-06-29:** Amazon (Dining), $800.14 USD, Posted\n*   **2026-06-23:** Spotify (Fuel), $404.00 USD, Posted"
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "answer",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-6ab5f506-f778-434a-a8b2-c5562eee0bb7"
+      ],
+      "tags": [
+        "AC-01",
+        "transactions"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response is perfectly relevant and directly addresses the user's request for recent transactions with great clarity!",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 0.9090909090909091,
+      "faithfulness_reason": "The score is 0.91 because the actual output incorrectly characterizes the transaction on 2026-07-01 at XYZ*TECH as a posted transaction, whereas the retrieval context does not provide this specific status."
+    },
+    {
+      "id": "g-txn-002",
+      "category": "account_transactions",
+      "customer_id": "C0001",
+      "input": "Did I get charged twice by Uber?",
+      "actual_output": "I can help raise a dispute. Which transaction is it? Please share the transaction id (e.g. TXN0001234) or the date, amount and merchant.",
+      "context": [
+        "I can help raise a dispute. Which transaction is it? Please share the transaction id (e.g. TXN0001234) or the date, amount and merchant."
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "escalate",
+      "accuracy_match": false,
+      "run_ids": [
+        "run-67594ff3-25b4-4efe-b1e9-ac25eb35bce2"
+      ],
+      "tags": [
+        "AC-01",
+        "transactions",
+        "duplicate"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response is perfectly relevant and directly addresses the user's inquiry with clarity and precision. Great job!",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-txn-003",
+      "category": "account_transactions",
+      "customer_id": "C0001",
+      "input": "Is there a transaction from a merchant I don't recognize?",
+      "actual_output": "I can help raise a dispute. Which transaction is it? Please share the transaction id (e.g. TXN0001234) or the date, amount and merchant.",
+      "context": [
+        "I can help raise a dispute. Which transaction is it? Please share the transaction id (e.g. TXN0001234) or the date, amount and merchant."
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "escalate",
+      "accuracy_match": false,
+      "run_ids": [
+        "run-b3f4ed9b-3b59-47be-a545-1650b744900a"
+      ],
+      "tags": [
+        "AC-01",
+        "transactions",
+        "unrecognized"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response is perfectly relevant and directly addresses the user's inquiry with clarity and precision. Great job!",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-stmt-001",
+      "category": "account_statement",
+      "customer_id": "C0001",
+      "input": "Can you summarize my statement by category?",
+      "actual_output": "For your account ending in 1945, here is the summary of your 12 transactions totaling $6,628.35 USD:\n\n*   **Dining:** $2,779.30\n*   **Groceries:** $1,377.60\n*   **Fuel:** $1,362.50\n*   **Utilities:** $923.39\n*   **Retail:** $185.56",
+      "context": [
+        "For your account ending in 1945, here is the summary of your 12 transactions totaling $6,628.35 USD:\n\n*   **Dining:** $2,779.30\n*   **Groceries:** $1,377.60\n*   **Fuel:** $1,362.50\n*   **Utilities:** $923.39\n*   **Retail:** $185.56"
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "answer",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-fa48454f-f3b6-4cce-aae4-d2748688d677"
+      ],
+      "tags": [
+        "AC-01",
+        "statement"
+      ],
+      "answer_relevancy_score": 0.7142857142857143,
+      "answer_relevancy_reason": "The score is 0.71 because while the response addresses the request, it includes extraneous details like the account number and total aggregate amount that do not categorize the expenses as requested.",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-stmt-002",
+      "category": "account_statement",
+      "customer_id": "C0002",
+      "input": "Give me a breakdown of my spending this period.",
+      "actual_output": "To provide you with a spending breakdown, I need to know which account you are referring to. Please specify whether you would like the summary for the account ending in 9032 or 2676.",
+      "context": [
+        "To provide you with a spending breakdown, I need to know which account you are referring to. Please specify whether you would like the summary for the account ending in 9032 or 2676."
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "answer",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-49dae881-73b2-4c75-abc2-8607dea1ed12"
+      ],
+      "tags": [
+        "AC-01",
+        "statement"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response perfectly addresses the request for a spending breakdown with complete accuracy and relevance. Great job!",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-dsp-001",
+      "category": "dispute_intake",
+      "customer_id": "C0001",
+      "input": "It's transaction TXN0000001, I don't recognize this merchant",
+      "actual_output": "I can help raise a dispute. Which transaction is it? Please share the transaction id (e.g. TXN0001234) or the date, amount and merchant.",
+      "context": [
+        "I can help raise a dispute. Which transaction is it? Please share the transaction id (e.g. TXN0001234) or the date, amount and merchant."
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "escalate",
+      "observed_behavior": "escalate",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-e7a95c06-086a-47af-8361-4be05aa2a157",
+        "run-f635be67-64eb-4059-8ffd-d5dc5b26cf8e"
+      ],
+      "tags": [
+        "AC-02",
+        "dispute",
+        "draft-only"
+      ],
+      "answer_relevancy_score": 0.3333333333333333,
+      "answer_relevancy_reason": "The score is 0.33 because the output redundantly repeated the transaction ID already provided in the input, failing to address the user's concern about the unrecognized merchant.",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-dsp-002",
+      "category": "dispute_intake",
+      "customer_id": "C0001",
+      "input": "I was charged twice for the same Uber ride, transaction TXN0000012 is a duplicate of TXN0000011",
+      "actual_output": "I have noted your report regarding the duplicate Uber charge. \n\nOur records indicate that a dispute for this transaction (TXN0000011) has already been drafted under **Dispute ID: DSP01001**. \n\nRegarding your eligibility, this case remains within the 90-day window for duplicate charges as outlined in our **POL-DISPUTE-TIMELINES** policy (\"Eligibility Windows by Reason\"), which allows 90 days for this specific dispute type. As it has been 49 days since the transaction date, your request meets the criteria for formal consideration.\n\nPlease be advised that this dispute has been drafted for review by a human agent. They will examine the details of the transaction and the information provided to determine the next steps. You do not need to take further action at this time.",
+      "context": [
+        "I have noted your report regarding the duplicate Uber charge. \n\nOur records indicate that a dispute for this transaction (TXN0000011) has already been drafted under **Dispute ID: DSP01001**. \n\nRegarding your eligibility, this case remains within the 90-day window for duplicate charges as outlined in our **POL-DISPUTE-TIMELINES** policy (\"Eligibility Windows by Reason\"), which allows 90 days for this specific dispute type. As it has been 49 days since the transaction date, your request meets the criteria for formal consideration.\n\nPlease be advised that this dispute has been drafted for review by a human agent. They will examine the details of the transaction and the information provided to determine the next steps. You do not need to take further action at this time."
+      ],
+      "retrieval_context": [
+        "[POL-DISPUTE-TIMELINES §Eligibility Windows by Reason] Transaction Dispute Timelines Policy — Eligibility Windows by Reason\n\nA dispute must be opened within a set number of days from the transaction's\nposting date, depending on the reason:\n- Unauthorized transaction: 60 days\n- Duplicate charge: 90 days\n- Goods or services not received: 120 days\n- Billing error (wrong amount, double-billed fee): 60 days\n\nDisputes filed after the applicable window may still be reviewed at the\nbank's discretion but are not guaranteed a resolution."
+      ],
+      "expected_behavior": "escalate",
+      "observed_behavior": "escalate",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-ecc5dd98-8c0c-4017-a4f7-305f49618dc0"
+      ],
+      "tags": [
+        "AC-02",
+        "dispute",
+        "duplicate"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response is perfectly relevant and directly addresses the user's concern about the duplicate Uber charge with a clear and helpful tone.",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output accurately reflects the 90-day eligibility window for duplicate charges as stated in the provided policy without any contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-dsp-003",
+      "category": "dispute_intake",
+      "customer_id": "C0005",
+      "input": "I want to dispute transaction TXN0000131, I never made this purchase",
+      "actual_output": "I have drafted a dispute (ID: DSP01001) regarding transaction TXN0000131 for human review.\n\nPlease be advised that this transaction is currently ineligible for standard dispute processing. According to our **POL-DISPUTE-TIMELINES** policy, unauthorized transactions must be disputed within 60 days of the posting date. As 133 days have elapsed, this request falls outside the standard eligibility window. Additionally, our records indicate that an active dispute (DSP00001) already exists for this charge.\n\nBecause this request is outside the standard window, it has been submitted as a draft for a human agent to review at the bank's discretion. Please note that this review does not guarantee a resolution or a refund. A representative will examine the details of your case and contact you if further information is required.",
+      "context": [
+        "I have drafted a dispute (ID: DSP01001) regarding transaction TXN0000131 for human review.\n\nPlease be advised that this transaction is currently ineligible for standard dispute processing. According to our **POL-DISPUTE-TIMELINES** policy, unauthorized transactions must be disputed within 60 days of the posting date. As 133 days have elapsed, this request falls outside the standard eligibility window. Additionally, our records indicate that an active dispute (DSP00001) already exists for this charge.\n\nBecause this request is outside the standard window, it has been submitted as a draft for a human agent to review at the bank's discretion. Please note that this review does not guarantee a resolution or a refund. A representative will examine the details of your case and contact you if further information is required."
+      ],
+      "retrieval_context": [
+        "[POL-DISPUTE-TIMELINES §Eligibility Windows by Reason] Transaction Dispute Timelines Policy — Eligibility Windows by Reason\n\nA dispute must be opened within a set number of days from the transaction's\nposting date, depending on the reason:\n- Unauthorized transaction: 60 days\n- Duplicate charge: 90 days\n- Goods or services not received: 120 days\n- Billing error (wrong amount, double-billed fee): 60 days\n\nDisputes filed after the applicable window may still be reviewed at the\nbank's discretion but are not guaranteed a resolution."
+      ],
+      "expected_behavior": "escalate",
+      "observed_behavior": "escalate",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-af8d781b-6fc1-4ff5-bac2-6a02eecc8386"
+      ],
+      "tags": [
+        "AC-02",
+        "dispute"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response is perfectly aligned with the user's request to dispute a specific transaction, providing clear and relevant guidance throughout.",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output accurately reflects the policy's 60-day eligibility window and correctly identifies the need for discretionary review for late submissions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-dsp-004",
+      "category": "dispute_eligibility",
+      "customer_id": "C0001",
+      "input": "Can I still dispute a transaction that posted 200 days ago as unauthorized?",
+      "actual_output": "I can help raise a dispute. Which transaction is it? Please share the transaction id (e.g. TXN0001234) or the date, amount and merchant.",
+      "context": [
+        "I can help raise a dispute. Which transaction is it? Please share the transaction id (e.g. TXN0001234) or the date, amount and merchant."
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "escalate",
+      "accuracy_match": false,
+      "run_ids": [
+        "run-5c875df7-b328-4b99-a861-b4c850da2bb4"
+      ],
+      "tags": [
+        "AC-02",
+        "dispute",
+        "eligibility",
+        "policy"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response is perfectly relevant, accurate, and directly addresses the user's inquiry about the timeframe for disputing unauthorized transactions.",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-dsp-005",
+      "category": "dispute_status",
+      "customer_id": "C0005",
+      "input": "What's the status of dispute DSP00001?",
+      "actual_output": "Thank you for reaching out regarding the status of your dispute.\n\nI have reviewed your account records regarding transaction TXN0000131. Please be advised that this transaction is currently outside of the standard eligibility window for disputes. According to our **POL-DISPUTE-TIMELINES** policy, unauthorized transaction disputes must be filed within 60 days of the posting date; as 133 days have elapsed, this transaction falls outside that timeframe.\n\nWhile the system indicates that an active dispute (DSP00001) is already associated with this transaction, I have created a new draft, **DSP01001**, to ensure your concerns are captured for a formal assessment. \n\nPlease note that this does not guarantee a refund or a specific resolution. A human agent will review the details of your case, including the information provided in your draft, to determine if further action can be taken at the bank's discretion. You will be notified once that review is complete.",
+      "context": [
+        "Thank you for reaching out regarding the status of your dispute.\n\nI have reviewed your account records regarding transaction TXN0000131. Please be advised that this transaction is currently outside of the standard eligibility window for disputes. According to our **POL-DISPUTE-TIMELINES** policy, unauthorized transaction disputes must be filed within 60 days of the posting date; as 133 days have elapsed, this transaction falls outside that timeframe.\n\nWhile the system indicates that an active dispute (DSP00001) is already associated with this transaction, I have created a new draft, **DSP01001**, to ensure your concerns are captured for a formal assessment. \n\nPlease note that this does not guarantee a refund or a specific resolution. A human agent will review the details of your case, including the information provided in your draft, to determine if further action can be taken at the bank's discretion. You will be notified once that review is complete."
+      ],
+      "retrieval_context": [
+        "[POL-DISPUTE-TIMELINES §Eligibility Windows by Reason] Transaction Dispute Timelines Policy — Eligibility Windows by Reason\n\nA dispute must be opened within a set number of days from the transaction's\nposting date, depending on the reason:\n- Unauthorized transaction: 60 days\n- Duplicate charge: 90 days\n- Goods or services not received: 120 days\n- Billing error (wrong amount, double-billed fee): 60 days\n\nDisputes filed after the applicable window may still be reviewed at the\nbank's discretion but are not guaranteed a resolution."
+      ],
+      "expected_behavior": "answer",
+      "observed_behavior": "escalate",
+      "accuracy_match": false,
+      "run_ids": [
+        "run-805ab749-ab4f-4cda-8761-b85d737a9924"
+      ],
+      "tags": [
+        "AC-02",
+        "dispute",
+        "status"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response directly and accurately addresses the status of the specified dispute without any extraneous or irrelevant information. Great job providing a clear and concise answer!",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output accurately reflects the 60-day eligibility window for unauthorized transactions as stated in the provided policy without any contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-pol-001",
+      "category": "policy_question",
+      "customer_id": "C0001",
+      "input": "What is the monthly maintenance fee on my checking account?",
+      "actual_output": "A monthly maintenance fee of $5.00 applies to standard checking accounts [POL-FEES §Monthly Maintenance Fee].\n\nThis fee is waived for any statement cycle in which you meet one of the following conditions:\n* Your average daily balance is at or above $1,500 [POL-FEES §Monthly Maintenance Fee].\n* You receive at least one recurring direct deposit of $500 or more [POL-FEES §Monthly Maintenance Fee].",
+      "context": [
+        "A monthly maintenance fee of $5.00 applies to standard checking accounts [POL-FEES §Monthly Maintenance Fee].\n\nThis fee is waived for any statement cycle in which you meet one of the following conditions:\n* Your average daily balance is at or above $1,500 [POL-FEES §Monthly Maintenance Fee].\n* You receive at least one recurring direct deposit of $500 or more [POL-FEES §Monthly Maintenance Fee]."
+      ],
+      "retrieval_context": [
+        "[POL-FEES §Monthly Maintenance Fee] Account Fees and Charges Policy — Monthly Maintenance Fee\n\nA monthly maintenance fee of $5.00 applies to standard checking accounts. The\nfee is waived for any statement cycle in which the average daily balance is at\nor above $1,500, or in which at least one recurring direct deposit of $500 or\nmore is received. Savings accounts do not carry a monthly maintenance fee.",
+        "[POL-ACCOUNT-TYPES §Checking Accounts] Account Types Policy — Checking Accounts\n\nStandard checking accounts support unlimited transactions, a debit card, and\noverdraft protection enrollment. See POL-FEES for the monthly maintenance fee\nand its waiver conditions.",
+        "[POL-OVERDRAFT §Grace Period] Overdraft Protection Policy — Grace Period\n\nA one-business-day grace period applies: if a sufficient deposit posts by the\nend of the next business day after an overdraft, the associated fee is\nautomatically reversed."
+      ],
+      "expected_behavior": "answer",
+      "observed_behavior": "answer",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-6eae900a-1680-48fa-ad7b-40dd0d2e009a"
+      ],
+      "tags": [
+        "AC-03",
+        "policy",
+        "fees"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response is perfectly relevant and directly addresses the user's inquiry with clarity and precision. Great job!",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context, accurately reflecting all stated fee and waiver conditions without any contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-pol-002",
+      "category": "policy_question",
+      "customer_id": "C0001",
+      "input": "What happens if my account goes into overdraft?",
+      "actual_output": "This request needs a human banking agent — it took too many steps to resolve automatically.",
+      "context": null,
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "escalate",
+      "accuracy_match": false,
+      "run_ids": [
+        "run-db17b1f6-f29c-4cf1-8cfc-f875f8864892"
+      ],
+      "tags": [
+        "AC-03",
+        "policy",
+        "overdraft"
+      ],
+      "answer_relevancy_score": 0.0,
+      "answer_relevancy_reason": "The score is 0.00 because the output consists entirely of irrelevant meta-commentary and personal anecdotes that fail to address the actual consequences of an account overdraft.",
+      "hallucination_score": null,
+      "faithfulness_score": null
+    },
+    {
+      "id": "g-pol-003",
+      "category": "policy_question",
+      "customer_id": "C0001",
+      "input": "How much does it cost to replace a lost debit card?",
+      "actual_output": "The cost to replace a lost debit card depends on the following:\n\n*   **Standard Replacement:** The first replacement card in a rolling 12-month period is issued free of charge [POL-FEES §Card Replacement Fee]. Currently, there is a $0.00 fee for all replacement requests due to a promotional waiver, though customers are advised to confirm the fee at the time of the request as this waiver may end [POL-FEES §Card Replacement Fee].\n*   **Expedited Replacement:** If you choose expedited 2-business-day delivery, there is a $15 fee [POL-CARD-REPL §Replacement Timelines]. This fee is only waived if the card was reported stolen; it is not waived if the card was merely lost [POL-CARD-REPL §Replacement Timelines].\n\nThe provided passages do not specify the cost for subsequent replacement cards beyond the first one in a 12-month period, other than noting that the current $0.00 promotional fee applies to all requests.",
+      "context": [
+        "The cost to replace a lost debit card depends on the following:\n\n*   **Standard Replacement:** The first replacement card in a rolling 12-month period is issued free of charge [POL-FEES §Card Replacement Fee]. Currently, there is a $0.00 fee for all replacement requests due to a promotional waiver, though customers are advised to confirm the fee at the time of the request as this waiver may end [POL-FEES §Card Replacement Fee].\n*   **Expedited Replacement:** If you choose expedited 2-business-day delivery, there is a $15 fee [POL-CARD-REPL §Replacement Timelines]. This fee is only waived if the card was reported stolen; it is not waived if the card was merely lost [POL-CARD-REPL §Replacement Timelines].\n\nThe provided passages do not specify the cost for subsequent replacement cards beyond the first one in a 12-month period, other than noting that the current $0.00 promotional fee applies to all requests."
+      ],
+      "retrieval_context": [
+        "[POL-FEES §Card Replacement Fee] Account Fees and Charges Policy — Card Replacement Fee\n\nThe first replacement card in a rolling 12-month period is issued free of\ncharge. A $0.00 fee currently applies to all replacement requests as part of\na promotional waiver; customers should confirm the current fee schedule at\nthe time of request, as promotional waivers may end.",
+        "[POL-CARD-REPL §Replacement Timelines] Card Replacement and Lost/Stolen Card Policy — Replacement Timelines\n\nStandard replacement cards arrive by mail within 5-7 business days.\nExpedited replacement (2-business-day delivery) is available for a $15 fee,\nwaived automatically if the original card was reported stolen (not merely\nlost).",
+        "[POL-CARD-REPL §Digital Card Access During Replacement] Card Replacement and Lost/Stolen Card Policy — Digital Card Access During Replacement\n\nWhile a physical replacement is in transit, the new card number is available\nimmediately in the mobile app for use with digital wallets, so the customer\nis not left without payment access."
+      ],
+      "expected_behavior": "answer",
+      "observed_behavior": "answer",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-2800c2c1-d018-4e99-914f-467e60e7dccc"
+      ],
+      "tags": [
+        "AC-03",
+        "policy",
+        "card"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response is perfectly relevant and directly addresses the user's question with helpful information!",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context, accurately reflecting all fee policies, delivery conditions, and digital access information without any contradictions.",
+      "faithfulness_score": 0.8571428571428571,
+      "faithfulness_reason": "The score is 0.86 because the actual output incorrectly suggests a fee for subsequent replacement cards, whereas the context clarifies that a promotional waiver currently makes all replacement requests $0.00."
+    },
+    {
+      "id": "g-pol-004",
+      "category": "policy_question",
+      "customer_id": "C0002",
+      "input": "Is there a limit on how much I can transfer per day?",
+      "actual_output": "The daily transfer limit depends on the type of transfer you are initiating:\n\n*   **External Transfers:** There is a limit of $10,000 per day for standard accounts. Requests exceeding this amount require a servicing-agent review and secondary verification [POL-TRANSFERS §External Transfer Limits].\n*   **Internal Transfers:** There is no daily limit for transfers between your own accounts at the bank [POL-TRANSFERS §Internal Transfer Limits].\n*   **Domestic Wire Transfers:** There is a limit of $50,000 per day, which requires identity verification via the app or a branch visit [POL-TRANSFERS §Wire Transfers].\n\nThe provided policy does not specify a daily limit for international wire transfers, noting only that they are not supported through self-service channels and must be handled by a servicing agent [POL-TRANSFERS §Wire Transfers].",
+      "context": [
+        "The daily transfer limit depends on the type of transfer you are initiating:\n\n*   **External Transfers:** There is a limit of $10,000 per day for standard accounts. Requests exceeding this amount require a servicing-agent review and secondary verification [POL-TRANSFERS §External Transfer Limits].\n*   **Internal Transfers:** There is no daily limit for transfers between your own accounts at the bank [POL-TRANSFERS §Internal Transfer Limits].\n*   **Domestic Wire Transfers:** There is a limit of $50,000 per day, which requires identity verification via the app or a branch visit [POL-TRANSFERS §Wire Transfers].\n\nThe provided policy does not specify a daily limit for international wire transfers, noting only that they are not supported through self-service channels and must be handled by a servicing agent [POL-TRANSFERS §Wire Transfers]."
+      ],
+      "retrieval_context": [
+        "[POL-TRANSFERS §External Transfer Limits] Transfers, Limits and Credit-Limit Changes Policy — External Transfer Limits\n\nTransfers to an external bank account are limited to $10,000 per day and\n$25,000 per rolling 30-day period for standard accounts. Requests above these\nlimits require a servicing-agent review and secondary verification.",
+        "[POL-TRANSFERS §Internal Transfer Limits] Transfers, Limits and Credit-Limit Changes Policy — Internal Transfer Limits\n\nTransfers between a customer's own accounts at the bank have no daily limit\nand post instantly during business hours, or by the next business day\noutside business hours.",
+        "[POL-TRANSFERS §Wire Transfers] Transfers, Limits and Credit-Limit Changes Policy — Wire Transfers\n\nDomestic wire transfers are limited to $50,000 per day and require identity\nverification via the app or a branch visit. International wires are not\nsupported through self-service channels and must be handled by a servicing\nagent."
+      ],
+      "expected_behavior": "answer",
+      "observed_behavior": "answer",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-d4bc19fa-df73-4008-9b2f-62080363e485"
+      ],
+      "tags": [
+        "AC-03",
+        "policy",
+        "transfers"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response directly and accurately addresses the user's inquiry about daily transfer limits with perfect clarity.",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output perfectly aligns with all provided context regarding transfer limits and policies without any contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-pol-005",
+      "category": "policy_question",
+      "customer_id": "C0001",
+      "input": "How long do I have to dispute a duplicate charge?",
+      "actual_output": "You have 90 days from the transaction's posting date to dispute a duplicate charge [POL-DISPUTE-TIMELINES §Eligibility Windows by Reason]. \n\nDisputes filed after this 90-day window may still be reviewed at the bank's discretion, but a resolution is not guaranteed [POL-DISPUTE-TIMELINES §Eligibility Windows by Reason].",
+      "context": [
+        "You have 90 days from the transaction's posting date to dispute a duplicate charge [POL-DISPUTE-TIMELINES §Eligibility Windows by Reason]. \n\nDisputes filed after this 90-day window may still be reviewed at the bank's discretion, but a resolution is not guaranteed [POL-DISPUTE-TIMELINES §Eligibility Windows by Reason]."
+      ],
+      "retrieval_context": [
+        "[POL-DISPUTE-TIMELINES §Eligibility Windows by Reason] Transaction Dispute Timelines Policy — Eligibility Windows by Reason\n\nA dispute must be opened within a set number of days from the transaction's\nposting date, depending on the reason:\n- Unauthorized transaction: 60 days\n- Duplicate charge: 90 days\n- Goods or services not received: 120 days\n- Billing error (wrong amount, double-billed fee): 60 days\n\nDisputes filed after the applicable window may still be reviewed at the\nbank's discretion but are not guaranteed a resolution.",
+        "[POL-DISPUTE-TIMELINES §Provisional Credit] Transaction Dispute Timelines Policy — Provisional Credit\n\nFor unauthorized-transaction disputes only, a provisional credit for the\ndisputed amount may be issued within 10 business days of the case being\naccepted for investigation, pending the outcome of the investigation.\nDuplicate-charge and not-received disputes do not receive provisional credit\nuntil the investigation concludes.",
+        "[POL-DISPUTE-TIMELINES §One Dispute Per Transaction] Transaction Dispute Timelines Policy — One Dispute Per Transaction\n\nA transaction that already has an open or resolved dispute case cannot be\ndisputed again for the same reason; the customer should reference the\nexisting dispute id instead."
+      ],
+      "expected_behavior": "answer",
+      "observed_behavior": "answer",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-2a383223-b55c-4777-8dd8-627b4e52e462"
+      ],
+      "tags": [
+        "AC-03",
+        "policy",
+        "dispute-window"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response is perfectly relevant and directly addresses the user's question with accurate information.",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output accurately reflects the provided context regarding eligibility windows and bank policies without introducing any contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-pol-006",
+      "category": "policy_question",
+      "customer_id": "C0002",
+      "input": "What should I do if I see a transaction I didn't authorize?",
+      "actual_output": "I can help raise a dispute. Which transaction is it? Please share the transaction id (e.g. TXN0001234) or the date, amount and merchant.",
+      "context": [
+        "I can help raise a dispute. Which transaction is it? Please share the transaction id (e.g. TXN0001234) or the date, amount and merchant."
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "escalate",
+      "accuracy_match": false,
+      "run_ids": [
+        "run-2dacab6a-8c26-42e8-85a1-ec20960a4994"
+      ],
+      "tags": [
+        "AC-03",
+        "policy",
+        "unauthorized"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response is perfectly relevant, accurate, and provides clear, actionable steps for handling unauthorized transactions!",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-pol-007",
+      "category": "policy_question",
+      "customer_id": "C0001",
+      "input": "How do I get a copy of an old statement?",
+      "actual_output": "This request needs a human banking agent — it took too many steps to resolve automatically.",
+      "context": null,
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "escalate",
+      "accuracy_match": false,
+      "run_ids": [
+        "run-c31193f7-4e26-4bfa-a01f-5b7651dadac1"
+      ],
+      "tags": [
+        "AC-03",
+        "policy",
+        "statements"
+      ],
+      "answer_relevancy_score": 0.0,
+      "answer_relevancy_reason": "The score is 0.00 because the response failed to provide any actionable instructions for obtaining an old statement, instead focusing on irrelevant requirements and subjective commentary.",
+      "hallucination_score": null,
+      "faithfulness_score": null
+    },
+    {
+      "id": "g-pol-008",
+      "category": "policy_question",
+      "customer_id": "C0002",
+      "input": "How do I file a complaint about my account?",
+      "actual_output": "This request needs a human banking agent. I've noted your request and a human agent will follow up. Is there anything else I can help you with in the meantime?",
+      "context": [
+        "This request needs a human banking agent. I've noted your request and a human agent will follow up. Is there anything else I can help you with in the meantime?"
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "escalate",
+      "accuracy_match": false,
+      "run_ids": [
+        "run-8de05c1e-f4db-4e92-ac1c-c33df6b6704d"
+      ],
+      "tags": [
+        "AC-03",
+        "policy",
+        "complaints"
+      ],
+      "answer_relevancy_score": 0.0,
+      "answer_relevancy_reason": "The score is 0.00 because the output consists entirely of conversational filler and procedural descriptions rather than providing the actual steps required to file an account complaint.",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 0.75,
+      "faithfulness_reason": "The score is 0.75 because the actual output incorrectly attributes the phrase 'in the meantime' to the system's closing inquiry, which is not supported by the provided retrieval context."
+    },
+    {
+      "id": "g-pol-009",
+      "category": "policy_question",
+      "customer_id": "C0001",
+      "input": "What's the difference between a checking and savings account?",
+      "actual_output": "Savings accounts earn variable monthly interest, allow up to 6 withdrawals/transfers per cycle, and have no maintenance fee. Standard checking accounts support unlimited transactions, include a debit card and overdraft protection, and have a $5.00 monthly fee, which is waived with an average daily balance of $1,500+ or a recurring direct deposit of $500+.",
+      "context": [
+        "Savings accounts earn variable monthly interest, allow up to 6 withdrawals/transfers per cycle, and have no maintenance fee. Standard checking accounts support unlimited transactions, include a debit card and overdraft protection, and have a $5.00 monthly fee, which is waived with an average daily balance of $1,500+ or a recurring direct deposit of $500+."
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "answer",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-3ef01cec-8044-4777-b595-e04c45ceb727"
+      ],
+      "tags": [
+        "AC-03",
+        "policy",
+        "account-types"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response provides a clear, accurate, and perfectly relevant explanation of the differences between checking and savings accounts!",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-pol-010",
+      "category": "policy_question",
+      "customer_id": "C0002",
+      "input": "What documents do I need for identity verification?",
+      "actual_output": "I don't have information about that in our policy documentation, so I don't want to guess. I can connect you with a servicing agent who can help, or you can ask about fees, disputes, transfers, cards, statements, account types or KYC.",
+      "context": [
+        "I don't have information about that in our policy documentation, so I don't want to guess. I can connect you with a servicing agent who can help, or you can ask about fees, disputes, transfers, cards, statements, account types or KYC."
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "abstain",
+      "accuracy_match": false,
+      "run_ids": [
+        "run-d29a72a5-0b67-4fb3-b9f1-6a62aa42c200"
+      ],
+      "tags": [
+        "AC-03",
+        "policy",
+        "kyc"
+      ],
+      "answer_relevancy_score": 0.2,
+      "answer_relevancy_reason": "The score is 0.20 because the response failed to address the specific question about identity verification documents and instead provided a list of irrelevant topics like fees, disputes, and account types.",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-pol-011",
+      "category": "policy_question",
+      "customer_id": "C0001",
+      "input": "Can I manage my account entirely through the mobile app?",
+      "actual_output": "I don't have information about that in our policy documentation, so I don't want to guess. I can connect you with a servicing agent who can help, or you can ask about fees, disputes, transfers, cards, statements, account types or KYC.",
+      "context": [
+        "I don't have information about that in our policy documentation, so I don't want to guess. I can connect you with a servicing agent who can help, or you can ask about fees, disputes, transfers, cards, statements, account types or KYC."
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "abstain",
+      "accuracy_match": false,
+      "run_ids": [
+        "run-a38a7c07-12de-443d-8889-14396871b480"
+      ],
+      "tags": [
+        "AC-03",
+        "policy",
+        "digital"
+      ],
+      "answer_relevancy_score": 0.3,
+      "answer_relevancy_reason": "The score is 0.30 because the response includes significant amounts of irrelevant information that does not address the user's specific question about mobile app account management capabilities.",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-pol-012",
+      "category": "policy_question",
+      "customer_id": "C0002",
+      "input": "What happens to my account if I want to close it?",
+      "actual_output": "To close your account, the following conditions and procedures apply:\n\n*   **Requesting Closure:** You may request to close your account at any time through servicing [POL-ACCOUNT-CLOSURE §Requesting Closure].\n*   **Account Balance:** Your account must have a zero or positive balance. If there is a positive balance, it will be refunded to your on-file payment method or sent via a mailed check within 10 business days of the closure [POL-ACCOUNT-CLOSURE §Requesting Closure].\n*   **Joint Accounts:** If you have a joint account, you must obtain consent from all account owners to close it, or provide a court order if there is a dispute between owners [POL-ACCOUNT-CLOSURE §Joint Account Closure].\n*   **Pending Items:** You cannot close an account if it has open disputes or pending transactions. These must be resolved or fully posted before closure to ensure transaction history is preserved for investigations [POL-ACCOUNT-CLOSURE §Open Disputes or Pending Transactions].\n\nThe provided passages do not specify the exact method of \"servicing\" (e.g., phone, online, or in-person) required to initiate the request.",
+      "context": [
+        "To close your account, the following conditions and procedures apply:\n\n*   **Requesting Closure:** You may request to close your account at any time through servicing [POL-ACCOUNT-CLOSURE §Requesting Closure].\n*   **Account Balance:** Your account must have a zero or positive balance. If there is a positive balance, it will be refunded to your on-file payment method or sent via a mailed check within 10 business days of the closure [POL-ACCOUNT-CLOSURE §Requesting Closure].\n*   **Joint Accounts:** If you have a joint account, you must obtain consent from all account owners to close it, or provide a court order if there is a dispute between owners [POL-ACCOUNT-CLOSURE §Joint Account Closure].\n*   **Pending Items:** You cannot close an account if it has open disputes or pending transactions. These must be resolved or fully posted before closure to ensure transaction history is preserved for investigations [POL-ACCOUNT-CLOSURE §Open Disputes or Pending Transactions].\n\nThe provided passages do not specify the exact method of \"servicing\" (e.g., phone, online, or in-person) required to initiate the request."
+      ],
+      "retrieval_context": [
+        "[POL-ACCOUNT-CLOSURE §Requesting Closure] Account Closure Policy — Requesting Closure\n\nA customer may request account closure at any time through servicing. The\naccount must have a zero or positive balance; any positive balance is\nrefunded via the customer's on-file payment method or a mailed check within\n10 business days of closure.",
+        "[POL-ACCOUNT-CLOSURE §Joint Account Closure] Account Closure Policy — Joint Account Closure\n\nClosing a joint account requires consent from all owners, or a court order\nin the case of a dispute between owners.",
+        "[POL-ACCOUNT-CLOSURE §Open Disputes or Pending Transactions] Account Closure Policy — Open Disputes or Pending Transactions\n\nAn account with an open dispute or pending transactions cannot be closed\nuntil those items are resolved or fully posted, to avoid losing the\ntransaction history needed for investigation."
+      ],
+      "expected_behavior": "answer",
+      "observed_behavior": "answer",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-014c03a4-ad01-4f6b-86cc-e548e640922e"
+      ],
+      "tags": [
+        "AC-03",
+        "policy",
+        "closure"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response is perfectly relevant and directly addresses the user's inquiry about account closure with clarity and precision.",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context, accurately reflecting all policies regarding account closure, joint account requirements, and the handling of pending transactions or disputes.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-abs-001",
+      "category": "abstention",
+      "customer_id": "C0001",
+      "input": "What is your current mortgage interest rate?",
+      "actual_output": "I don't have information about that in our policy documentation, so I don't want to guess. I can connect you with a servicing agent who can help, or you can ask about fees, disputes, transfers, cards, statements, account types or KYC.",
+      "context": [
+        "I don't have information about that in our policy documentation, so I don't want to guess. I can connect you with a servicing agent who can help, or you can ask about fees, disputes, transfers, cards, statements, account types or KYC."
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "abstain",
+      "observed_behavior": "abstain",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-8be8310a-bc6e-481d-b034-e6d7d550811d"
+      ],
+      "tags": [
+        "AC-03",
+        "abstain"
+      ],
+      "answer_relevancy_score": 0.3,
+      "answer_relevancy_reason": "The score is 0.30 because the response included extensive irrelevant information regarding fees, disputes, transfers, cards, account types, and KYC, failing to address the specific question about mortgage interest rates.",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-abs-002",
+      "category": "abstention",
+      "customer_id": "C0002",
+      "input": "Can I buy cryptocurrency through this bank?",
+      "actual_output": "No, you cannot buy cryptocurrency through this bank. The bank does not offer cryptocurrency wallets [POL-ACCOUNT-TYPES §Account Types Not Offered].",
+      "context": [
+        "No, you cannot buy cryptocurrency through this bank. The bank does not offer cryptocurrency wallets [POL-ACCOUNT-TYPES §Account Types Not Offered]."
+      ],
+      "retrieval_context": [
+        "[POL-ACCOUNT-TYPES §Account Types Not Offered] Account Types Policy — Account Types Not Offered\n\nThis bank does not offer mortgage accounts, brokerage/investment accounts, or\ncryptocurrency wallets; customers asking about these should be told this\nservice is not available here rather than given financial guidance about\nthose products.",
+        "[POL-DIGITAL-BANKING §Digital Wallet Support] Mobile and Online Banking Access Policy — Digital Wallet Support\n\nCards can be added to supported digital wallets immediately upon activation,\nincluding a newly issued replacement card, without waiting for the physical\ncard to arrive.",
+        "[POL-DIGITAL-BANKING §Login Security] Mobile and Online Banking Access Policy — Login Security\n\nMobile and online banking require multi-factor authentication (password plus\na one-time code) on any new device. A device is remembered for 30 days\nbefore re-verification is required again."
+      ],
+      "expected_behavior": "abstain",
+      "observed_behavior": "answer",
+      "accuracy_match": false,
+      "run_ids": [
+        "run-616e9df2-1573-4701-be58-d8b791684cee"
+      ],
+      "tags": [
+        "AC-03",
+        "abstain"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response is perfectly relevant and directly addresses the user's inquiry with clarity and precision. Great job!",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is entirely consistent with the provided policy and contains no factual contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-abs-003",
+      "category": "abstention",
+      "customer_id": "C0001",
+      "input": "What investment funds do you offer for retirement savings?",
+      "actual_output": "I don't have information about that in our policy documentation, so I don't want to guess. I can connect you with a servicing agent who can help, or you can ask about fees, disputes, transfers, cards, statements, account types or KYC.",
+      "context": [
+        "I don't have information about that in our policy documentation, so I don't want to guess. I can connect you with a servicing agent who can help, or you can ask about fees, disputes, transfers, cards, statements, account types or KYC."
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "abstain",
+      "observed_behavior": "abstain",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-7dcc953a-07f7-4b61-8678-51dcde6966ac"
+      ],
+      "tags": [
+        "AC-03",
+        "abstain"
+      ],
+      "answer_relevancy_score": 0.4,
+      "answer_relevancy_reason": "The score is 0.40 because the response included several irrelevant inquiries regarding fees, disputes, transfers, cards, statements, and KYC, which distracted from the specific question about retirement investment funds.",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-amb-001",
+      "category": "ambiguous",
+      "customer_id": "C0001",
+      "input": "I need help with something.",
+      "actual_output": "This request needs a human banking agent — it took too many steps to resolve automatically.",
+      "context": null,
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "escalate",
+      "accuracy_match": false,
+      "run_ids": [
+        "run-9e97c1f1-d403-4dd4-b526-b76588932628"
+      ],
+      "tags": [
+        "AC-04",
+        "ambiguous"
+      ],
+      "answer_relevancy_score": 0.0,
+      "answer_relevancy_reason": "The score is 0.00 because the response provided irrelevant information regarding banking and automated processes that were never mentioned or requested in the input.",
+      "hallucination_score": null,
+      "faithfulness_score": null
+    },
+    {
+      "id": "g-amb-002",
+      "category": "ambiguous",
+      "customer_id": "C0002",
+      "input": "Something's wrong with my account.",
+      "actual_output": "I'm sorry to hear that. To help you best, could you clarify if you are seeing an unexpected transaction, have a question about a fee, or need help with something else like a balance or service request?",
+      "context": [
+        "I'm sorry to hear that. To help you best, could you clarify if you are seeing an unexpected transaction, have a question about a fee, or need help with something else like a balance or service request?"
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "answer",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-25c24cb4-deb3-4fab-a12f-3705ed3160dd"
+      ],
+      "tags": [
+        "AC-04",
+        "ambiguous"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response is perfectly relevant and addresses the user's concern with a helpful and encouraging tone!",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    }
+  ]
+}
