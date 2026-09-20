@@ -342,6 +342,11 @@ guard stops runaway loops.
   PATH`), deliberately not filtered to one clean run (the `.phoenix/`
   working directory is kept across every run specifically so this export
   reflects real failures too, not just successes).
+- **Why the Phoenix dashboard shows cost `$0`:** Phoenix has no per-model
+  prices configured, and the runs used Gemini's free tier, so its cost column
+  reads `$0` (see `reports/dashboard.png`). The real estimate is computed
+  separately from Google's published prices in `reports/golden_signals.json`
+  (about $0.44 at the paid list price; `src/observability/pricing.py`).
 - `python scripts/verify_citations.py <doc>... [--out PATH]` checks every
   cited `run_id`/`trace_id`/`span_id` in a Markdown doc actually resolves to
   a committed artifact (`traces/phoenix_spans.parquet` or `logs/*.jsonl`).

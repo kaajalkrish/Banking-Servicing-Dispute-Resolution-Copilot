@@ -134,7 +134,9 @@ calls, over 6,820 spans with a 12.0% span error rate (the causes include
 free-tier quota errors and the failures in `docs/failure-analysis.md`; the
 split was not measured). Token volume was 566,547 input and 97,826 output, which is about $0.44
 at the paid Standard list price (the runs used the free tier, so nothing was
-billed).
+billed). Phoenix's own dashboard (`reports/dashboard.png`) shows cost $0
+because no model prices are configured in Phoenix; the estimate above is computed
+separately from Google's published prices.
 
 ## 8. Known limitations and failure modes
 
