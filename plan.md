@@ -1120,6 +1120,14 @@ Write the citation-gated governance pack, document the OAuth/secrets-rotation ap
 - Body: Remove stray files, confirm .gitignore/.env.example, update README phase-status table, confirm no Dockerfile/compose exists, confirm `ref-doc.md` untouched (`git log -- ref-doc.md` shows one commit).
 - Refs: §6.2, NFR-01, NFR-07
 
+**Deviations decided while building Phase 6 (recorded after the fact; commit bodies carry the detail):**
+- **Count:** 24 commits on the branch against 18 planned. P6-02 (control catalog) was already committed in Phase 5 (`b73b527`).
+- **P6-07 / P6-08 (output-risk sample):** built with **zero API calls**. `scripts/output_risk_sample.py` joins the real answers in `reports/eval_report.json` with the real tiers in `logs/agent_actions.jsonl` by run_id, instead of running requests live. Three cases whose recorded answer is the recursion fallback (FA-03) are excluded and listed.
+- **P6-12 (API demo):** ran live on `conv-balance` and `conv-injection` only, with `gemini-3.1-flash-lite`. It was run twice: the first log gave every event one timestamp and was discarded after the script was fixed to log each event as it arrives.
+- **P6-15 / P6-16 (`repro_check`):** skipped: not required by ref-doc §7 or §8, and it would cost real Gemini quota. The manifest and citation report were still generated and committed (P6-16, offline part).
+- **Extra commits:** citations to uncommitted files fixed (found by the extended verifier); AI-disclosure banner (`src/common/disclosure.py`) and control CTL-26; FastAPI/uvicorn/httpx pinned in `requirements.txt`; `scripts/scan_evidence_for_pii.py` fixed (hex ids, UUIDs and float fractions were flagged as card numbers) and `reports/pii_scan.json` regenerated clean; manifest extended to supporting evidence.
+- **Not done:** the optional §8.1 optimization note (P5-11 to P5-15) and a re-score of the evaluation after the three fixes.
+
 ### 11.4 Exit checklist
 ```bash
 pytest -q -m "not live"
