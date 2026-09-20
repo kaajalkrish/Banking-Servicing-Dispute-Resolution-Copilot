@@ -1,5 +1,5 @@
 {
-  "git_head": "7c01287",
+  "git_head": "45d4b38",
   "artifact_count": 40,
   "artifacts": [
     {
@@ -141,18 +141,18 @@
     {
       "path": "docs/model-card.md",
       "section": "7.5",
-      "sha256": "e9118c2dbdef866b3b415643b818ca134d65aebdd6672667d4962fc2e02f76bf",
-      "bytes": 9542,
+      "sha256": "281460113bae7b95aef86509cab1bad3e4f1fc81f7aeab81c6eeadcc978e25ae",
+      "bytes": 9576,
       "produced_by": "hand-written; checked by python scripts/verify_citations.py",
-      "last_commit": "b35b8f5"
+      "last_commit": "45d4b38"
     },
     {
       "path": "docs/compliance.md",
       "section": "7.5",
-      "sha256": "30a4f095246a38b6fac67cd7c59c378eca91d45b45dd01ce8496c9a37422a8c1",
-      "bytes": 15526,
+      "sha256": "dd76ff97a5489807e3c7c0a0c6d91fd80ec4ea43c353ac99d5866fa946a2be8c",
+      "bytes": 15718,
       "produced_by": "hand-written; checked by python scripts/verify_citations.py",
-      "last_commit": "6423964"
+      "last_commit": "45d4b38"
     },
     {
       "path": "docs/output-risk.md",
@@ -205,10 +205,10 @@
     {
       "path": "README.md",
       "section": "7.7",
-      "sha256": "93287f1dca7ac2ee43a4f3af57f50e3f749f9f0cd6dda838183cc51c498fe2b7",
-      "bytes": 26755,
+      "sha256": "29a593e083575b5de2f836b4e6f8dc93bd8b12fd276a7e940564d272f2a54a20",
+      "bytes": 28777,
       "produced_by": "source code / hand-written",
-      "last_commit": "b35b8f5"
+      "last_commit": "45d4b38"
     },
     {
       "path": "reports/eval_report_initial.json",
@@ -293,18 +293,18 @@
     {
       "path": "docs/control-catalog.md",
       "section": "supporting",
-      "sha256": "7c0ab69d5566ed164acf19e66d9e88a89096be33cc1fa60db9332c3f7a4432c4",
-      "bytes": 5641,
+      "sha256": "5e1cb39a10b9c7774a883a9601113cec14cc013a6b92934de670ed133faafdfe",
+      "bytes": 5705,
       "produced_by": "hand-written; checked by python scripts/verify_citations.py",
-      "last_commit": "6423964"
+      "last_commit": "45d4b38"
     },
     {
       "path": "docs/architecture.md",
       "section": "supporting",
-      "sha256": "0389b2343e4b4043b7ed8d9570fdb36afb3576490faa507b194649b23647df0e",
-      "bytes": 13553,
+      "sha256": "2fc772ab9fcede8c9b7b5699655af04f35adcc691f65135be9125fceab6efdda",
+      "bytes": 14231,
       "produced_by": "hand-written",
-      "last_commit": "9e538c6"
+      "last_commit": "45d4b38"
     },
     {
       "path": "docs/security-approach.md",
@@ -460,13 +460,13 @@
       "section": "7.5",
       "name": "path docs/model-card.md",
       "ok": true,
-      "detail": "9542 bytes"
+      "detail": "9576 bytes"
     },
     {
       "section": "7.5",
       "name": "path docs/compliance.md",
       "ok": true,
-      "detail": "15526 bytes"
+      "detail": "15718 bytes"
     },
     {
       "section": "7.5",
@@ -508,7 +508,7 @@
       "section": "7.7",
       "name": "path README.md",
       "ok": true,
-      "detail": "26755 bytes"
+      "detail": "28777 bytes"
     },
     {
       "section": "7.7",
