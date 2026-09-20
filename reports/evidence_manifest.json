@@ -1,5 +1,5 @@
 {
-  "git_head": "e698534",
+  "git_head": "6423964",
   "artifact_count": 40,
   "artifacts": [
     {
@@ -125,10 +125,10 @@
     {
       "path": ".gitignore",
       "section": "7.4",
-      "sha256": "9a2f28903b18ea5279847b35b2e27cf7e12e223420faf3c7427142ea2a05a369",
-      "bytes": 410,
+      "sha256": "3670ec7204991f7423af6fa2613f42f00ad6a79e9f78b565f4c1db46f8b8b039",
+      "bytes": 527,
       "produced_by": "source code / hand-written",
-      "last_commit": "cf9f14d"
+      "last_commit": "8d7ae13"
     },
     {
       "path": "docs/risk-register.md",
@@ -141,18 +141,18 @@
     {
       "path": "docs/model-card.md",
       "section": "7.5",
-      "sha256": "9c1f33d325a8f564577cee5753676aecc0e0ff5ba12acfcc039138d27cd0c816",
-      "bytes": 9313,
+      "sha256": "c08bb93739caedf7633204843168c5294d082d5afb78344c94f9c13d62c836da",
+      "bytes": 9351,
       "produced_by": "hand-written; checked by python scripts/verify_citations.py",
-      "last_commit": "67ec745"
+      "last_commit": "6423964"
     },
     {
       "path": "docs/compliance.md",
       "section": "7.5",
-      "sha256": "b3fa0515287bf2313f0dafeb6c146e4b162b22a0e55fdaf29fe1c7d6f8483692",
-      "bytes": 15171,
+      "sha256": "30a4f095246a38b6fac67cd7c59c378eca91d45b45dd01ce8496c9a37422a8c1",
+      "bytes": 15526,
       "produced_by": "hand-written; checked by python scripts/verify_citations.py",
-      "last_commit": "1a52a8c"
+      "last_commit": "6423964"
     },
     {
       "path": "docs/output-risk.md",
@@ -205,10 +205,10 @@
     {
       "path": "README.md",
       "section": "7.7",
-      "sha256": "52b8f24dd60eeb4079942ce3aba33116cb2d642c5e22e43f275af1dc845b9585",
-      "bytes": 25496,
+      "sha256": "80080a5a6cdda28b2137fa0ebae312d57166cb88f315868a177acae115123825",
+      "bytes": 26375,
       "produced_by": "source code / hand-written",
-      "last_commit": "9d42013"
+      "last_commit": "6423964"
     },
     {
       "path": "reports/eval_report_initial.json",
@@ -237,10 +237,10 @@
     {
       "path": "reports/citation_check.json",
       "section": "supporting",
-      "sha256": "87daf4a78a5f3120ae9702cddeff1bb45fe3d84fb4e2c87fd8d75c43ba59e12b",
+      "sha256": "4032fe530e4c2fc85fbb3bb4ee0c42fdae01501ef627aa15869b563327443666",
       "bytes": 367,
       "produced_by": "python scripts/verify_citations.py",
-      "last_commit": "6c4fcc2"
+      "last_commit": "bb1514c"
     },
     {
       "path": "reports/tool_reconciliation.json",
@@ -293,18 +293,18 @@
     {
       "path": "docs/control-catalog.md",
       "section": "supporting",
-      "sha256": "861e6f3149344ccc7bcaa5bc9d95bc871c9e311385305c7d298ad3c51fe8a777",
-      "bytes": 5402,
+      "sha256": "7c0ab69d5566ed164acf19e66d9e88a89096be33cc1fa60db9332c3f7a4432c4",
+      "bytes": 5641,
       "produced_by": "hand-written; checked by python scripts/verify_citations.py",
-      "last_commit": "23e0d3c"
+      "last_commit": "6423964"
     },
     {
       "path": "docs/architecture.md",
       "section": "supporting",
-      "sha256": "d8c2ab34ad0a3ea4272de9f6d4a89ca0fd11c76c7097f902e6c5f80ff31f378c",
-      "bytes": 11976,
+      "sha256": "ae06c5584508522949f7095296fcff68629298087fba44732d51c46750c2fdc7",
+      "bytes": 13443,
       "produced_by": "hand-written",
-      "last_commit": "2cb893e"
+      "last_commit": "6423964"
     },
     {
       "path": "docs/security-approach.md",
@@ -448,7 +448,7 @@
       "section": "7.4",
       "name": "path .gitignore",
       "ok": true,
-      "detail": "410 bytes"
+      "detail": "527 bytes"
     },
     {
       "section": "7.5",
@@ -460,13 +460,13 @@
       "section": "7.5",
       "name": "path docs/model-card.md",
       "ok": true,
-      "detail": "9313 bytes"
+      "detail": "9351 bytes"
     },
     {
       "section": "7.5",
       "name": "path docs/compliance.md",
       "ok": true,
-      "detail": "15171 bytes"
+      "detail": "15526 bytes"
     },
     {
       "section": "7.5",
@@ -508,7 +508,7 @@
       "section": "7.7",
       "name": "path README.md",
       "ok": true,
-      "detail": "25496 bytes"
+      "detail": "26375 bytes"
     },
     {
       "section": "7.7",
@@ -598,7 +598,7 @@
       "section": "3.4",
       "name": "citations resolve",
       "ok": true,
-      "detail": "6 docs, 25 controls"
+      "detail": "6 docs, 26 controls"
     },
     {
       "section": "7.4",
