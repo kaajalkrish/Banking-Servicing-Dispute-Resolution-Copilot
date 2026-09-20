@@ -1126,6 +1126,8 @@ Write the citation-gated governance pack, document the OAuth/secrets-rotation ap
 - **P6-12 (API demo):** ran live on `conv-balance` and `conv-injection` only, with `gemini-3.1-flash-lite`. It was run twice: the first log gave every event one timestamp and was discarded after the script was fixed to log each event as it arrives.
 - **P6-15 / P6-16 (`repro_check`):** skipped: not required by ref-doc §7 or §8, and it would cost real Gemini quota. The manifest and citation report were still generated and committed (P6-16, offline part).
 - **Extra commits:** citations to uncommitted files fixed (found by the extended verifier); AI-disclosure banner (`src/common/disclosure.py`) and control CTL-26; FastAPI/uvicorn/httpx pinned in `requirements.txt`; `scripts/scan_evidence_for_pii.py` fixed (hex ids, UUIDs and float fractions were flagged as card numbers) and `reports/pii_scan.json` regenerated clean; manifest extended to supporting evidence.
+- **Fixes made after checking the repo line by line against ref-doc.md:** the failure analysis now cites Phoenix `trace_id` and `span_id` for each failure and the FA-03 fix commit; the README and model card explain why Phoenix's dashboard shows cost $0 while the report computes about $0.44; the unused `guardrails-ai` pin was removed (guards are policy functions plus Presidio, which ref-doc §8 allows); `tests/test_tool_contracts.py` covers `get_dispute_status`'s success shape.
+- **Golden-set size:** the scored evaluation uses 30 of the 47 authored cases by team decision (P5-03); ref-doc sets no minimum, so this is not treated as a gap.
 - **Not done:** the optional §8.1 optimization note (P5-11 to P5-15) and a re-score of the evaluation after the three fixes.
 
 ### 11.4 Exit checklist
