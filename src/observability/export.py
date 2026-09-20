@@ -35,10 +35,17 @@ def _stringify_nested_columns(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def get_all_spans(project_name: str, *, limit: int = 100_000) -> pd.DataFrame:
-    """Fetch all spans for a project as a dataframe, ready for export."""
+    """Fetch all spans for a project as a dataframe, ready for export.
+
+    Real bug found live: get_spans_dataframe()'s own default timeout is only
+    5 seconds, and .phoenix/'s sqlite db grows with every run kept for real
+    evidence (D-07) -- once it reached ~100MB (this project's real history),
+    the default silently timed out (ReadTimeout) before returning anything.
+    120s gives real headroom without hiding a genuinely stuck server.
+    """
     init_tracing(project_name)  # ensures a Phoenix app is running against .phoenix/
     client = get_client(PHOENIX_URL)
-    return client.spans.get_spans_dataframe(project_name=project_name, limit=limit)
+    return client.spans.get_spans_dataframe(project_name=project_name, limit=limit, timeout=120)
 
 
 def export_parquet(df: pd.DataFrame, path: Path) -> None:
