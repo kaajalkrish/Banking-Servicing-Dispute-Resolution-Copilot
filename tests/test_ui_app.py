@@ -26,6 +26,11 @@ _FINAL = {
 }
 
 
+@pytest.fixture(autouse=True)
+def _never_start_a_real_api(monkeypatch):
+    monkeypatch.setenv("COPILOT_START_API", "0")  # the app would otherwise launch `python -m src.api`
+
+
 def _events(final: dict | None = None, *, error: str | None = None) -> list[tuple[str, dict]]:
     events = [("start", {"disclosure": AI_DISCLOSURE}), ("progress", {"node": "supervisor"}), ("progress", {"node": "finalize"})]
     if error:
@@ -57,9 +62,9 @@ def _ask(at: AppTest, text: str = "What is my balance?") -> AppTest:
     return at.chat_input[0].set_value(text).run()
 
 
-def test_first_render_shows_the_ai_disclosure_before_any_interaction(app):
+def test_first_render_shows_the_title_and_an_empty_chat(app):
     assert not app.exception
-    assert [i.value for i in app.info] == [AI_DISCLOSURE]
+    assert len(app.info) == 0  # no banner: the page opens straight on the chat
     assert app.title[0].value == "Banking Servicing Copilot"
     assert len(app.chat_input) == 1
     assert len(app.chat_message) == 0
@@ -76,6 +81,26 @@ def test_an_unreachable_api_is_reported_with_the_command_to_start_it(monkeypatch
     at = AppTest.from_file(APP, default_timeout=60).run()
     assert not at.exception
     assert "python -m src.api" in at.sidebar.error[0].value
+    assert at.chat_input[0].disabled  # no question can be sent until the API is ready
+
+
+def test_an_api_that_died_while_starting_shows_the_tail_of_its_log(monkeypatch):
+    class Dead:
+        def poll(self):
+            return 1
+
+    from src.ui import api_process
+    import streamlit as st
+
+    st.cache_resource.clear()  # _api_process is cached per server; tests share one process
+
+    monkeypatch.setattr(client, "api_health", lambda *_a, **_k: None)
+    monkeypatch.setattr(api_process, "ensure_api", lambda _url: Dead())
+    monkeypatch.setattr(api_process, "log_tail", lambda *_a: "GOOGLE_API_KEY is not set")
+    at = AppTest.from_file(APP, default_timeout=60).run()
+    assert not at.exception
+    assert "stopped while starting" in at.sidebar.error[0].value
+    assert "GOOGLE_API_KEY is not set" in at.sidebar.error[0].value
 
 
 def test_a_turn_shows_the_question_the_answer_and_its_risk_tier(app):

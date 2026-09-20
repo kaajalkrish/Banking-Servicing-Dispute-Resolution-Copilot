@@ -2,16 +2,14 @@
 the CLI as the required interface and FastAPI streaming as optional, and does not
 evaluate interface polish, §2).
 
-Run (two terminals):
+Run (one command; it also starts the streaming API if it is not already running,
+which takes about a minute in the background while the UI is already open):
 
-    python -m src.api        # the streaming API
-    python -m src.ui         # this UI (streamlit run src/ui/app.py)
+    streamlit run src/ui/app.py      # or: python -m src.ui
 
 It is a thin client of ``POST /chat/stream`` (src/ui/client.py), so every
 control in the graph applies unchanged. Design decisions:
 
-- The AI disclosure (src/common/disclosure.py, CTL-26) is shown at the top of the
-  page from the first render, before any interaction (AI Act Art. 50(1) and (5)).
 - Only node *names* are shown while a turn runs, never node content: a worker's
   draft has not yet passed the output guard and risk gate. The customer sees one
   answer, the one ``finalize`` produced.
@@ -34,9 +32,8 @@ if str(_ROOT) not in sys.path:
 
 import streamlit as st  # noqa: E402
 
-from src.common.disclosure import AI_DISCLOSURE  # noqa: E402
 from src.common.masking import mask_text  # noqa: E402
-from src.ui import client  # noqa: E402
+from src.ui import api_process, client  # noqa: E402
 
 NODE_LABELS = {
     "input_guard": "Checked your message",
@@ -88,7 +85,33 @@ def _init_state(customer_id: str) -> None:
         _reset_conversation()
 
 
+@st.cache_resource
+def _api_process() -> Any:
+    """Start the API once per Streamlit server (not per rerun or session), unless it
+    is already running or COPILOT_START_API=0. Stopped again when the server exits."""
+    return api_process.ensure_api(client.DEFAULT_API_URL)
+
+
+@st.fragment(run_every=3)
+def _api_status(api_url: str, ready_at_render: bool) -> None:
+    """Poll /health every few seconds; re-run the page when the API comes up (or goes away)."""
+    ready = client.api_health(api_url) is not None
+    if ready != ready_at_render:
+        st.rerun()
+    proc = _api_process()
+    if ready:
+        st.success("API ready")
+    elif proc is not None and proc.poll() is not None:
+        st.error(f"The API stopped while starting. Last of its log:\n\n```\n{api_process.log_tail()}\n```")
+    else:
+        st.error(
+            "API not ready yet. It is loading in the background (about a minute); this switches "
+            "to ready by itself. If it never does, start it yourself with: python -m src.api"
+        )
+
+
 def _sidebar() -> tuple[str, str]:
+    _api_process()  # kicks off the API on the first render of a server
     st.sidebar.header("Session")
     api_url = st.sidebar.text_input("API URL", value=client.DEFAULT_API_URL)
     customers = client.load_customers()
@@ -96,14 +119,8 @@ def _sidebar() -> tuple[str, str]:
     customer_id = st.sidebar.selectbox("Customer (synthetic)", options=list(labels), format_func=labels.get)
     if st.sidebar.button("New conversation"):
         _reset_conversation()
-    if client.api_health(api_url) is None:
-        st.sidebar.error("API not reachable. Start it with: python -m src.api")
-    else:
-        st.sidebar.success("API ready")
-    st.sidebar.caption(
-        "No login: the customer picked here is trusted, like the CLI's --customer-id. "
-        "Synthetic data, local use only."
-    )
+    with st.sidebar:
+        _api_status(api_url, client.api_health(api_url) is not None)
     return api_url, customer_id
 
 
@@ -145,14 +162,14 @@ def main() -> None:
     _init_state(customer_id)
 
     st.title("Banking Servicing Copilot")
-    st.info(AI_DISCLOSURE)
 
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
             _render_meta(message.get("meta") or {})
 
-    prompt = st.chat_input("Ask about your accounts, a dispute or a bank policy")
+    ready = client.api_health(api_url) is not None
+    prompt = st.chat_input("Ask about your accounts, a dispute or a bank policy", disabled=not ready)
     if prompt:
         st.session_state.messages.append({"role": "user", "content": prompt, "meta": {}})
         with st.chat_message("user"):

@@ -13,6 +13,7 @@ server-sent events ``start`` / ``progress`` / ``error`` / ``final``.
 from __future__ import annotations
 
 import json
+import os
 import uuid
 from collections.abc import Iterable, Iterator
 from pathlib import Path
@@ -20,7 +21,7 @@ from typing import Any
 
 import httpx
 
-DEFAULT_API_URL = "http://127.0.0.1:8000"
+DEFAULT_API_URL = os.environ.get("COPILOT_API_URL", "http://127.0.0.1:8000")  # set by `python -m src.ui`
 _CUSTOMERS_PATH = Path(__file__).resolve().parents[2] / "data" / "synthetic" / "customers.json"
 
 
