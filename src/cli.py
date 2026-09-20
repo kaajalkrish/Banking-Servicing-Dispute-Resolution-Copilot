@@ -21,6 +21,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from src.common.disclosure import AI_DISCLOSURE
 from src.common.masking import mask_text
 from src.config import settings
 
@@ -109,6 +110,15 @@ async def _invoke_turn(graph: Any, state: dict[str, Any], config: dict[str, Any]
         }
 
 
+def chat_banner(customer_id: str, thread_id: str, *, interactive: bool) -> list[str]:
+    """Lines printed before a chat starts. Always leads with the AI
+    disclosure, so the customer knows what they are talking to."""
+    lines = [AI_DISCLOSURE]
+    if interactive:
+        lines.append(f"Chat as {customer_id} (thread {thread_id}). Type 'exit' to quit.")
+    return lines
+
+
 async def cmd_chat(args: argparse.Namespace) -> int:
     from src.common.ids import new_run_id
     from src.graph import build_graph, open_checkpointer, run_config
@@ -145,12 +155,14 @@ async def cmd_chat(args: argparse.Namespace) -> int:
                 )
             _print("copilot> " + await _answer_for(out))
 
+        for line in chat_banner(args.customer_id, thread_id, interactive=not args.message):
+            _print(line)
+
         if args.message:
             await turn(args.message)
             flush_tracing()
             return 0
 
-        _print(f"Chat as {args.customer_id} (thread {thread_id}). Type 'exit' to quit.")
         while True:
             try:
                 text = input("you> ").strip()
