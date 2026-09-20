@@ -1,5 +1,5 @@
 {
-  "git_head": "6423964",
+  "git_head": "7c01287",
   "artifact_count": 40,
   "artifacts": [
     {
@@ -69,10 +69,10 @@
     {
       "path": "docs/failure-analysis.md",
       "section": "7.2",
-      "sha256": "b3aed5637510ac56df9eb69bedad2f8fd859ad3547abb4ffb69315a51319a1e9",
-      "bytes": 6802,
+      "sha256": "5d79584b2bf453aaf23d40a692238f00f1449394fd9e1cac27f665750553f9cc",
+      "bytes": 7873,
       "produced_by": "hand-written from Phoenix traces; checked by python scripts/verify_citations.py",
-      "last_commit": "23e0d3c"
+      "last_commit": "87727cc"
     },
     {
       "path": "reports/golden_signals.json",
@@ -141,10 +141,10 @@
     {
       "path": "docs/model-card.md",
       "section": "7.5",
-      "sha256": "c08bb93739caedf7633204843168c5294d082d5afb78344c94f9c13d62c836da",
-      "bytes": 9351,
+      "sha256": "e9118c2dbdef866b3b415643b818ca134d65aebdd6672667d4962fc2e02f76bf",
+      "bytes": 9542,
       "produced_by": "hand-written; checked by python scripts/verify_citations.py",
-      "last_commit": "6423964"
+      "last_commit": "b35b8f5"
     },
     {
       "path": "docs/compliance.md",
@@ -197,18 +197,18 @@
     {
       "path": "tests/test_tool_contracts.py",
       "section": "7.6",
-      "sha256": "e38faa2fe0d6c63d0b91c7a8262880866db5736dfee52e45e9c73bf8b4217739",
-      "bytes": 7297,
+      "sha256": "7b07eb8ad8d9956a39301b628ae418518c3ddb192daa08478a67a9507782046a",
+      "bytes": 7942,
       "produced_by": "source code / hand-written",
-      "last_commit": "5a22535"
+      "last_commit": "7067e45"
     },
     {
       "path": "README.md",
       "section": "7.7",
-      "sha256": "80080a5a6cdda28b2137fa0ebae312d57166cb88f315868a177acae115123825",
-      "bytes": 26375,
+      "sha256": "93287f1dca7ac2ee43a4f3af57f50e3f749f9f0cd6dda838183cc51c498fe2b7",
+      "bytes": 26755,
       "produced_by": "source code / hand-written",
-      "last_commit": "6423964"
+      "last_commit": "b35b8f5"
     },
     {
       "path": "reports/eval_report_initial.json",
@@ -240,7 +240,7 @@
       "sha256": "4032fe530e4c2fc85fbb3bb4ee0c42fdae01501ef627aa15869b563327443666",
       "bytes": 367,
       "produced_by": "python scripts/verify_citations.py",
-      "last_commit": "bb1514c"
+      "last_commit": "b66ec8f"
     },
     {
       "path": "reports/tool_reconciliation.json",
@@ -301,10 +301,10 @@
     {
       "path": "docs/architecture.md",
       "section": "supporting",
-      "sha256": "ae06c5584508522949f7095296fcff68629298087fba44732d51c46750c2fdc7",
-      "bytes": 13443,
+      "sha256": "0389b2343e4b4043b7ed8d9570fdb36afb3576490faa507b194649b23647df0e",
+      "bytes": 13553,
       "produced_by": "hand-written",
-      "last_commit": "6423964"
+      "last_commit": "9e538c6"
     },
     {
       "path": "docs/security-approach.md",
@@ -400,7 +400,7 @@
       "section": "7.2",
       "name": "path docs/failure-analysis.md",
       "ok": true,
-      "detail": "6802 bytes"
+      "detail": "7873 bytes"
     },
     {
       "section": "7.3",
@@ -460,7 +460,7 @@
       "section": "7.5",
       "name": "path docs/model-card.md",
       "ok": true,
-      "detail": "9351 bytes"
+      "detail": "9542 bytes"
     },
     {
       "section": "7.5",
@@ -502,13 +502,13 @@
       "section": "7.6",
       "name": "path tests/test_tool_contracts.py",
       "ok": true,
-      "detail": "7297 bytes"
+      "detail": "7942 bytes"
     },
     {
       "section": "7.7",
       "name": "path README.md",
       "ok": true,
-      "detail": "26375 bytes"
+      "detail": "26755 bytes"
     },
     {
       "section": "7.7",
@@ -568,7 +568,7 @@
       "section": "7.6",
       "name": "tests tests/test_tool_contracts.py",
       "ok": true,
-      "detail": "13 test function(s)"
+      "detail": "14 test function(s)"
     },
     {
       "section": "7.5",
