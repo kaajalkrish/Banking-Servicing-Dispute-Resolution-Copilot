@@ -64,7 +64,6 @@ _REPO_PREFIXES = (
 _ROOT_FILES = {
     "README.md",
     "ref-doc.md",
-    "plan.md",
     ".env.example",
     ".gitignore",
     "requirements.txt",

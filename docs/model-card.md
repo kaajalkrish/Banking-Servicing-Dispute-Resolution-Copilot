@@ -43,7 +43,7 @@ exists anywhere in the repository.
 |---|---|---|
 | Banking records | 5 customers, 9 accounts, 134 transactions, 3 seed disputes; PANs are Luhn-valid numbers on a reserved test BIN | `scripts/generate_synthetic_data.py --seed 42` (deterministic), output in `data/synthetic/` |
 | Policy corpus | 12 synthetic policy documents (fees, overdraft, cards, disputes, KYC, ...); mortgages, cryptocurrency and investments are deliberately absent so abstention can be tested | `data/policy_corpus/` |
-| Golden set | 47 authored cases, of which the first 30 are scored (a free-tier quota limit, see `plan.md`) | `data/golden_set/golden.jsonl` |
+| Golden set | 47 authored cases, of which the first 30 are scored (a free-tier quota limit, see `docs/plan.md`) | `data/golden_set/golden.jsonl` |
 | Red-team set | 37 attacks across 8 categories, tagged with OWASP LLM ids | `data/redteam/attacks.jsonl` |
 
 Account numbers and PANs are masked wherever they are shown or logged

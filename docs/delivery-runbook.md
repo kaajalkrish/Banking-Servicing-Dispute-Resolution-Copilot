@@ -2,7 +2,7 @@
 
 How to get this repository from the personal laptop onto the Git host at the
 office and merge the six phase branches by pull request. It follows
-`plan.md` sections 4.7 and 4.8 and Appendix C, with the real branch names.
+`docs/plan.md` sections 4.7 and 4.8 and Appendix C, with the real branch names.
 
 Roles: **A** is Kaajal Krishnamurthy, **B** is Akash Saranathan. Whoever is at
 the keyboard sets their own identity on the office laptop (step 3).
