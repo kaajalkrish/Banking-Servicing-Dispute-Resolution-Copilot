@@ -134,13 +134,13 @@ All eight tools reach the graph through one registry, `build_tools` in
   models: the Phase 5 evaluation ran worker and judge on `gemini-3.1-flash-lite`
   (recorded in `reports/eval_report.json` metadata). ref-doc requires Gemini,
   not a specific version.
-- **Installed versions** (`pip list`, Python 3.12): langgraph 1.2.11,
+- **Library versions** (pinned in `requirements.txt`, Python 3.12): langgraph 1.2.11,
   langchain-core 1.6.3, langchain-google-genai 4.4.0, langchain-mcp-adapters
   0.3.2, mcp 1.30.0, langmem 0.0.30, chromadb 1.5.9, sentence-transformers
-  6.1.0, arize-phoenix 14.6.0, deepeval 4.2.3, guardrails-ai 0.11.0, pytest
-  9.1.1, fastapi 0.141.1, uvicorn 0.53.0, httpx 0.28.1. `arize-phoenix` is
+  6.1.0, arize-phoenix 14.6.0, deepeval 4.2.3, presidio-analyzer 2.2.364, pytest 9.1.1, fastapi 0.141.1, uvicorn 0.53.0, httpx 0.28.1. `arize-phoenix` is
   pinned to 14.6.0 because 14.7+ pulls in a dependency that upgrades `mcp` to
-  2.x and breaks `mcp_server/server.py`.
+  2.x and breaks `mcp_server/server.py`. Guardrails are policy functions plus
+  Presidio; Guardrails-AI and LLM Guard are not used.
 
 ## 5. Observability and evaluation plane
 
