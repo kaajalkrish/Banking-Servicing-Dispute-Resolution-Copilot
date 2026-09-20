@@ -61,3 +61,10 @@ spacy==3.8.16
 # .env.example disables its anonymous telemetry (confirmed against the
 # installed 4.2.3's src/deepeval/config/settings.py).
 deepeval==4.2.3
+
+# --- Streaming API bonus (Phase 6) ---
+# Direct dependencies of src/api/ (previously only present transitively via
+# arize-phoenix / mcp). Versions are the ones already installed and verified.
+fastapi==0.141.1
+uvicorn==0.53.0
+httpx==0.28.1
