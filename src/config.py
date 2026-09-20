@@ -43,6 +43,13 @@ def _get_int(name: str, default: int) -> int:
         return default
 
 
+def _get_float(name: str, default: float) -> float:
+    try:
+        return float(_get(name, str(default)))
+    except ValueError:
+        return default
+
+
 @dataclass(frozen=True)
 class Settings:
     """Immutable view of the process configuration."""
@@ -80,6 +87,13 @@ class Settings:
     phoenix_project: str = field(
         default_factory=lambda: _get("PHOENIX_PROJECT", "bank-copilot")
     )
+
+    # --- Streaming API (Phase 6 bonus, src/api/) ---
+    # Binds to loopback by default: the API trusts the customer_id it is given
+    # (real authentication is documented, not built: docs/security-approach.md).
+    api_host: str = field(default_factory=lambda: _get("API_HOST", "127.0.0.1"))
+    api_port: int = field(default_factory=lambda: _get_int("API_PORT", 8000))
+    api_turn_timeout_s: float = field(default_factory=lambda: _get_float("API_TURN_TIMEOUT_S", 120.0))
 
     def has_api_key(self) -> bool:
         return self.google_api_key not in _PLACEHOLDER_KEYS
