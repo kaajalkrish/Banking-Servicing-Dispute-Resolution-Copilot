@@ -1,0 +1,44 @@
+{
+  "project": "bank-copilot",
+  "span_count": 6810,
+  "latency_by_class": {
+    "acting": {
+      "p50_ms": 15.008000000000001,
+      "p95_ms": 9242.8555,
+      "count": 5207
+    },
+    "thinking": {
+      "p50_ms": 692.5945,
+      "p95_ms": 7463.60425,
+      "count": 1506
+    },
+    "tool": {
+      "p50_ms": 3573.435,
+      "p95_ms": 20180.89799999998,
+      "count": 97
+    }
+  },
+  "tokens": {
+    "input_tokens": 566212,
+    "output_tokens": 97788,
+    "llm_call_count": 1506
+  },
+  "request_volume": {
+    "request_count": 6810,
+    "error_count": 814,
+    "error_rate": 0.11953010279001468
+  },
+  "cost": {
+    "total_usd": null,
+    "note": "price not confirmed for: gemini-3.1-flash-lite, gemini-3.5-flash, gemini-3.5-flash-lite (see src/observability/pricing.py, [MANUAL] M-3)",
+    "models": [
+      "gemini-3.1-flash-lite",
+      "gemini-3.5-flash",
+      "gemini-3.5-flash-lite"
+    ],
+    "per_model_usd": null
+  },
+  "accuracy": 0.6,
+  "hallucination_rate": 0.0,
+  "eval_report_source": "reports/eval_report_initial.json"
+}
