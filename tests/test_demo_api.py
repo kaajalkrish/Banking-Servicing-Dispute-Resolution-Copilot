@@ -107,3 +107,12 @@ def test_load_conversations_keeps_order_and_rejects_unknown_ids(tmp_path):
 def test_default_demo_conversations_exist_in_the_committed_samples():
     ids = demo.DEFAULT_CONVERSATIONS.split(",")
     assert [c["conversation_id"] for c in demo.load_conversations(demo.SAMPLE_INPUTS, ids)] == ids
+
+
+async def test_events_are_logged_with_an_arrival_offset(tmp_path):
+    import re
+
+    _, text = await _run(FakeGraph([{"supervisor": {}}, _finalize()]), _CONVS[:1], tmp_path)
+    evt_lines = [ln for ln in text.splitlines() if " EVT " in ln]
+    assert evt_lines and all(re.search(r" EVT  \w+ \+\d+ms ", ln) for ln in evt_lines)
+    assert "stream closed: 4 events" in text  # start, 2 progress, final

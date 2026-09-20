@@ -84,6 +84,20 @@ def load_conversations(path: Path, ids: list[str]) -> list[dict[str, Any]]:
     return [by_id[i] for i in ids]
 
 
+async def iter_frames(resp: httpx.Response):
+    """Yield (event, json) frames as each one arrives on the wire, so the log can
+    show real incremental delivery instead of one batch at the end."""
+    event, data = None, []
+    async for line in resp.aiter_lines():
+        if line.startswith("event: "):
+            event = line[7:]
+        elif line.startswith("data: "):
+            data.append(line[6:])
+        elif line == "" and event is not None:
+            yield event, (json.loads("\n".join(data)) if data else {})
+            event, data = None, []
+
+
 def parse_sse(lines: list[str]) -> list[tuple[str, dict[str, Any]]]:
     """Group ``event:`` / ``data:`` lines into (event, json) frames."""
     frames: list[tuple[str, dict[str, Any]]] = []
@@ -129,6 +143,7 @@ async def run_demo(client: httpx.AsyncClient, conversations: list[dict[str, Any]
             turns += 1
             started = time.perf_counter()
             log.line("REQ", f"POST /chat/stream customer={cid} thread={thread} message={text!r}")
+            frames: list[tuple[str, dict[str, Any]]] = []
             async with client.stream(
                 "POST", "/chat/stream", json={"customer_id": cid, "message": text, "thread_id": thread}
             ) as resp:
@@ -137,19 +152,20 @@ async def run_demo(client: httpx.AsyncClient, conversations: list[dict[str, Any]
                     log.line("FAIL", f"HTTP {resp.status_code} {body}")
                     ok = False
                     continue
-                raw_lines = [line async for line in resp.aiter_lines()]
+                log.line("OK", "HTTP 200 text/event-stream: events follow as they arrive (+ms since the request)")
+                async for name, data in iter_frames(resp):
+                    frames.append((name, data))
+                    offset_ms = (time.perf_counter() - started) * 1000
+                    if name == "final":
+                        detail = (
+                            f"tier={data.get('risk_tier')} human_review={data.get('requires_human_review')} "
+                            f"escalated={data.get('escalated')} answer={data.get('answer')!r}"
+                        )
+                    else:
+                        detail = json.dumps(data, ensure_ascii=False)
+                    log.line("EVT", f"{name} +{offset_ms:.0f}ms {detail}")
             elapsed_ms = (time.perf_counter() - started) * 1000
-            frames = parse_sse(raw_lines)
-            log.line("OK", f"HTTP 200 text/event-stream, {len(frames)} events in {elapsed_ms:.0f} ms")
-            for name, data in frames:
-                if name == "final":
-                    log.line(
-                        "EVT",
-                        f"final tier={data.get('risk_tier')} human_review={data.get('requires_human_review')} "
-                        f"escalated={data.get('escalated')} answer={data.get('answer')!r}",
-                    )
-                else:
-                    log.line("EVT", f"{name} {json.dumps(data, ensure_ascii=False)}")
+            log.line("OK", f"stream closed: {len(frames)} events in {elapsed_ms:.0f} ms")
             problem = _check_frames(frames)
             if problem:
                 log.line("FAIL", problem)
