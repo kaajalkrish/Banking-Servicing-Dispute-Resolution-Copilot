@@ -257,12 +257,47 @@ customer_id. SQLite checkpointer for short-term memory; a step/recursion
 guard stops runaway loops.
 ```
 
+## Evaluation & cost governance (Phase 5)
+
+- `python -m src.cli eval [--out PATH] [--limit N] [--no-score]` runs the
+  golden set (`data/golden_set/golden.jsonl`, 47 authored cases; 30 is the
+  scored target — see plan.md's note on why) through the live graph and
+  scores it with DeepEval (`src/evaluation/harness.py`): hallucination,
+  faithfulness, answer relevancy (Gemini judge, `src/evaluation/
+  gemini_judge.py`), plus a custom accuracy metric comparing observed vs
+  expected behavior. `regenerate --eval [--limit N]` does the same as part of
+  a full regeneration.
+- **Checkpointing**: after every case, progress is saved to
+  `artifacts_regen/eval_checkpoint.json` (gitignored) and the real output
+  path is rewritten too, so a crash or quota wall loses at most one case's
+  work — rerunning the same command resumes automatically instead of
+  starting over.
+- `python -m src.observability.golden_signals [--project P] [--eval PATH]
+  [--out PATH]` computes p50/p95 latency split by thinking/acting/tool
+  (`src/observability/span_types.py`), token totals, a cost estimate
+  (`src/observability/pricing.py` — ships with an empty price table until a
+  human confirms current published prices; reports cost as `null` with a
+  clear note rather than guessing), request/error rate, and imports
+  `accuracy`/`hallucination_rate` from an eval report.
+- `reports/eval_report_initial.json` — the first, pre-fix evidence run (30
+  cases, accuracy 0.6). `docs/failure-analysis.md` documents the 3 real
+  failures it surfaced, each with a citation to a real `run_id` and tool-log
+  record, root cause, and the commit that fixed it.
+- `reports/dashboard_data.csv` — the full real span history underlying the
+  Phoenix latency/cost/token dashboard (`python -m src.cli export --csv
+  PATH`), deliberately not filtered to one clean run (the `.phoenix/`
+  working directory is kept across every run specifically so this export
+  reflects real failures too, not just successes).
+- `python scripts/verify_citations.py <doc>... [--out PATH]` checks every
+  cited `run_id`/`trace_id`/`span_id` in a Markdown doc actually resolves to
+  a committed artifact (`traces/phoenix_spans.parquet` or `logs/*.jsonl`).
+
 ## Coming in later phases
 
-- _Evaluation & cost_ — DeepEval (Gemini judge), golden signals, dashboard _(Phase 5)_
 - _Governance_ — risk register, model card, compliance mapping, output-risk _(Phase 6)_
 - _Bonus_ — FastAPI streaming endpoint _(Phase 6)_
-- _Regenerate evaluation_ added to the `regenerate` command _(Phase 5)_
+- _Optimization note_ — baseline vs. optimized profile comparison, ref-doc.md's
+  optional §8.1 item _(deferred to last, Phase 5/6)_
 
 ## Scope
 
