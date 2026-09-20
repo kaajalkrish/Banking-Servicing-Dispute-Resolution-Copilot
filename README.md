@@ -275,10 +275,13 @@ guard stops runaway loops.
 - `python -m src.observability.golden_signals [--project P] [--eval PATH]
   [--out PATH]` computes p50/p95 latency split by thinking/acting/tool
   (`src/observability/span_types.py`), token totals, a cost estimate
-  (`src/observability/pricing.py` — ships with an empty price table until a
-  human confirms current published prices; reports cost as `null` with a
-  clear note rather than guessing), request/error rate, and imports
-  `accuracy`/`hallucination_rate` from an eval report.
+  (`src/observability/pricing.py` — per-model list prices copied from
+  Google's published Gemini pricing page, with the source URL and the date
+  confirmed recorded in the report; runs used the free tier, so the figure is
+  the equivalent cost at paid Standard list price, not billed spend; a model
+  with no confirmed price makes cost `null` with a note instead of a guess),
+  request/error rate, and imports `accuracy`/`hallucination_rate` from an
+  eval report.
 - `reports/eval_report_initial.json` — the first, pre-fix evidence run (30
   cases, accuracy 0.6). `docs/failure-analysis.md` documents the 3 real
   failures it surfaced, each with a citation to a real `run_id` and tool-log
