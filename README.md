@@ -6,16 +6,38 @@ account-servicing, dispute, product-info) over a custom MCP server, grounded in
 policy and instrumented for observability, cost governance, security, compliance
 and evaluation. **Gemini is the only model provider. No Docker, no external DB.**
 
-> Status: **Phase 4 complete** (Phases 1-3 foundation + observability, plus
-> security & guardrails: input/output guardrails, tool-scope enforcement,
-> audit trail, secrets/PII scanners, red-team attack set). Later phases fill
-> in the sections marked _(coming)_.
+> Status: Phases 1-5 are complete (foundation, context/memory/RAG,
+> observability, security & guardrails, evaluation & cost governance). Phase 6
+> adds the governance pack (`docs/`), an optional streaming API and the
+> submission verifiers; see "What is not done" at the end for anything still
+> pending.
+
+## The two commands
+
+```bash
+# 1. Run the copilot (interactive chat as a synthetic customer):
+python -m src.cli chat --customer-id C0001
+
+# 2. Regenerate the Phoenix traces and the evaluation from the committed
+#    sample inputs and golden set (writes to gitignored artifacts_regen/):
+python -m src.cli regenerate --traces --eval --limit 5
+```
+
+Both make live Gemini calls, so they need the setup below. `regenerate`
+without `--limit` scores the whole golden set (see the quota note under
+"Configure"); add `--commit-evidence` only when you intend to overwrite the
+committed `traces/` and `logs/` evidence. Details are in the sections below.
 
 ## Prerequisites
 
 - Python 3.11+ (developed on 3.12)
 - A Google Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey)
   (a valid key starts with `AIza`)
+- **First-run downloads** (one-time, need internet): the Sentence-Transformers
+  model `all-MiniLM-L6-v2` (~90 MB, used by the policy index and long-term
+  memory search) and the spaCy English model that Presidio loads
+  (`en_core_web_lg`; `requirements.txt` notes it is fetched on first use if
+  absent). Expect a delay on the first guarded turn.
 
 ## Install
 
@@ -35,7 +57,8 @@ cp .env.example .env          # then edit .env
 
 Optional overrides (safe defaults applied otherwise): `GEMINI_MODEL`
 (`gemini-3.5-flash`), `GEMINI_MODEL_FAST` (`gemini-3.5-flash-lite`), `LOG_DIR`,
-`STATE_DIR`, `MAX_STEPS`, `RECURSION_LIMIT`. See `.env.example`.
+`STATE_DIR`, `MAX_STEPS`, `RECURSION_LIMIT`, and for the optional streaming
+API `API_HOST`, `API_PORT`, `API_TURN_TIMEOUT_S`. See `.env.example`.
 
 > **Gemini free-tier quota note:** the flash-tier model is capped at 20
 > requests/day per project; flash-lite has its own separate daily quota **and**
@@ -86,12 +109,34 @@ python -m src.cli run --inputs data/sample_inputs/conversations.jsonl
 python -m src.cli mcp-demo
 ```
 
+`chat` starts by telling the customer they are talking to an automated AI
+assistant that cannot approve refunds or disputes (`src/common/disclosure.py`).
+
+## Regenerate traces and the evaluation
+
+```bash
+python -m src.cli regenerate --traces --eval [--limit N] [--inputs PATH] [--commit-evidence] [--keep-ui]
+```
+
+Replays `data/sample_inputs/conversations.jsonl` (14 conversations, 15 turns)
+through the traced graph, exports the Phoenix spans, and scores the golden set
+with the DeepEval harness. `--limit N` scores only the first N golden cases
+(use it for a smoke run). By default everything lands in gitignored
+`artifacts_regen/`; `--commit-evidence` writes the real `traces/` and `logs/`
+paths instead. The eval and the trace export can also be run separately:
+`python -m src.cli eval --out PATH [--limit N]` and
+`python -m src.cli export --parquet PATH --csv PATH`.
+
 ## Test
 
 ```bash
 pytest -q -m "not live"     # offline, deterministic (fake LLMs); the default
 pytest -q -m live           # tests that call real Gemini (need GOOGLE_API_KEY)
 ```
+
+Always pass `-m "not live"` for routine runs: the live tests spend real Gemini
+quota. The three agent tests the brief asks for are `tests/test_routing.py`,
+`tests/test_loops.py` and `tests/test_tool_contracts.py`.
 
 ## Memory & context (Phase 2)
 
@@ -295,12 +340,102 @@ guard stops runaway loops.
   cited `run_id`/`trace_id`/`span_id` in a Markdown doc actually resolves to
   a committed artifact (`traces/phoenix_spans.parquet` or `logs/*.jsonl`).
 
-## Coming in later phases
+## Governance pack (Phase 6)
 
-- _Governance_ — risk register, model card, compliance mapping, output-risk _(Phase 6)_
-- _Bonus_ — FastAPI streaming endpoint _(Phase 6)_
-- _Optimization note_ — baseline vs. optimized profile comparison, ref-doc.md's
-  optional §8.1 item _(deferred to last, Phase 5/6)_
+Written for a reviewer; every claim cites a control ID or a committed file.
+
+| Document | What it is |
+|---|---|
+| [`docs/architecture.md`](docs/architecture.md) | Final graph, trust boundaries, tool and MCP layout, model and library versions |
+| [`docs/control-catalog.md`](docs/control-catalog.md) | 25 controls with stable IDs (`CTL-01` ...), each with a code path and an evidence artifact |
+| [`docs/risk-register.md`](docs/risk-register.md) | 17 risks (OWASP LLM Top 10 / NIST AI RMF) with likelihood, impact, mitigation, residual risk, owner |
+| [`docs/model-card.md`](docs/model-card.md) | Models, synthetic data, intended and out-of-scope use, human oversight, evaluation, limitations |
+| [`docs/compliance.md`](docs/compliance.md) | EU AI Act, NIST AI RMF and India DPDP Act mapped to controls, with status and gaps (not legal advice) |
+| [`docs/security-approach.md`](docs/security-approach.md) | How real authentication, secrets rotation, breach handling and erasure would work (described, not built) |
+| [`docs/failure-analysis.md`](docs/failure-analysis.md) | Three real failures with run ids, root cause and fix |
+
+`python scripts/verify_citations.py` checks that every run/trace/span id,
+every `CTL-xx` and every repository path cited in these documents resolves to
+a committed artifact, and that each catalogued control's code path, symbol and
+evidence exist. It writes `reports/citation_check.json` and exits non-zero on
+any unresolved citation.
+
+## Streaming API (optional bonus)
+
+A backend HTTP endpoint, not a web UI. It runs the same graph as the CLI, so
+the guardrails, audit trail and tracing are identical.
+
+```bash
+python -m src.api                      # http://127.0.0.1:8000  (API_HOST / API_PORT)
+curl -N -X POST http://127.0.0.1:8000/chat/stream \
+  -H "Content-Type: application/json" \
+  -d '{"customer_id": "C0001", "message": "What is my balance?"}'
+```
+
+`POST /chat/stream` returns server-sent events: `start` (with the AI
+disclosure and the `run_id`), one `progress` event per graph node, and a
+`final` answer; a failure adds an `error` event and still ends with a safe,
+human-review `final`. Only node names stream while a turn runs, because a
+worker draft has not yet passed the output guard. `GET /health` reports
+liveness without a model call. **There is no authentication:** the endpoint
+trusts the `customer_id` it is sent, so it binds to loopback by default and
+must not be exposed (`docs/security-approach.md`).
+
+`python scripts/demo_api.py` starts the server on a free port, streams three
+sample conversations and writes a masked run log to `logs/api_demo.log`. It
+isolates the server's logs and state under `artifacts_regen/api_demo/`, so it
+does not touch the committed evidence.
+
+## Where each required artifact comes from
+
+Each artifact below is produced by committed code. "Hand-written" means a
+document authored from evidence the code produced.
+
+| Artifact (ref-doc §7) | Produced by |
+|---|---|
+| `src/graph.py`, `src/context/`, `src/memory/`, `src/tools/rag_tool.py` | Source code; run with `python -m src.cli chat` |
+| `mcp_server/`, `logs/mcp_transcript.jsonl` | `python -m src.cli mcp-demo` |
+| `logs/memory_test.log` | `pytest tests/test_memory_persistence.py -m live -q` |
+| `data/policy_corpus/` (index built locally) | `python scripts/build_policy_index.py` |
+| `src/observability/tracing.py`, `traces/phoenix_spans.parquet` | `python -m src.cli export --parquet traces/phoenix_spans.parquet` (or `regenerate --traces --commit-evidence`) |
+| `logs/tool_calls.jsonl`, `logs/agent_actions.jsonl` | Written by the logging and audit middleware on every run; `python -m src.cli regenerate --traces --commit-evidence` |
+| `reports/tool_reconciliation.json` | `python scripts/verify_tool_names.py` |
+| `docs/failure-analysis.md` | Hand-written from Phoenix traces; `python scripts/verify_citations.py` checks it |
+| `reports/golden_signals.json` | `python -m src.observability.golden_signals --eval reports/eval_report_initial.json --out reports/golden_signals.json` |
+| `reports/dashboard.png`, `reports/dashboard_data.csv` | Screenshot of the local Phoenix UI (`--keep-ui`); `python -m src.cli export --csv reports/dashboard_data.csv` |
+| `src/guardrails/`, `.env.example`, `.gitignore` | Source code; `python scripts/check_secrets.py`, `python scripts/scan_evidence_for_pii.py` |
+| `reports/redteam_results.json`, `docs/redteam-results.md` | `python -m src.cli redteam` |
+| `docs/risk-register.md`, `docs/model-card.md`, `docs/compliance.md` | Hand-written; checked by `python scripts/verify_citations.py` |
+| `docs/output-risk.md`, `reports/output_risk_sample.json` | **Pending:** the sample needs a live run (`python scripts/output_risk_sample.py`, not yet written or run) |
+| `reports/eval_report.json`, `src/evaluation/harness.py` | `python -m src.cli eval --out reports/eval_report.json`. The committed file has the same content as `eval_report_initial.json`: the run made **before** the three fixes in `docs/failure-analysis.md` (accuracy 0.6); it has not been re-scored |
+| `tests/test_routing.py`, `tests/test_loops.py`, `tests/test_tool_contracts.py` | `pytest -q -m "not live"` |
+| `src/api/` (bonus), `logs/api_demo.log` | `python -m src.api`; `python scripts/demo_api.py` (the committed log needs a live run) |
+
+## Git workflow
+
+Work is done on six stacked phase branches, each created from the tip of the
+previous one (`phase-1/foundation-graph-mcp` through
+`phase-6/governance-delivery-bonus`); nothing is merged locally and `main`
+holds only the root commit until delivery. Each phase branch is then merged
+into `main` by pull request with a merge commit (`git merge --no-ff`), never
+squashed or rebased, and there are no direct pushes to `main`. Commits follow
+`type(scope): subject` with a body that explains what and why, `Refs:`,
+`Evidence:` and `Generated-by:` trailers on evidence commits, and both
+teammates credited on every commit (one as author, the other as the final
+`Co-authored-by:` trailer). The full convention is in `plan.md` section 4.
+
+## What is not done
+
+- **Output-risk sample and document** (`docs/output-risk.md`,
+  `reports/output_risk_sample.json`): need a live run; not yet produced.
+- **API demo log** (`logs/api_demo.log`): the script exists; a live run has not
+  been committed.
+- **Optimization note** (baseline vs. optimized profile): ref-doc §8.1
+  Good-to-Have, deferred; not started.
+- **Re-scoring after the three fixes:** the committed evaluation predates
+  them.
+- Real authentication, consent and data-principal rights, and other gaps are
+  listed in `docs/compliance.md` and `docs/security-approach.md`.
 
 ## Scope
 
