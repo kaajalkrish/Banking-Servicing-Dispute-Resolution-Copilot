@@ -24,6 +24,7 @@ packages = [
     "src.evaluation",
     "src.common",
     "src.api",
+    "src.ui",
     "mcp_server",
 ]
 

@@ -69,3 +69,8 @@ deepeval==4.2.3
 fastapi==0.141.1
 uvicorn==0.53.0
 httpx==0.28.1
+
+# --- Streamlit UI, optional extra (Phase 6) ---
+# Only for src/ui/ (a thin client of the streaming API). Installed with no changes to
+# the packages pinned above (pandas<4 is accepted; checked with a pip dry run).
+streamlit==1.64.0
