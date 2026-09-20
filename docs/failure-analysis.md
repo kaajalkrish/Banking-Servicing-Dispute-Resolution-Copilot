@@ -4,8 +4,8 @@
 > 30 golden-set cases, `gemini-3.1-flash-lite`), each cited to a real committed
 > tool-log record (`logs/tool_calls.jsonl` / `logs/agent_actions.jsonl`) and the
 > exact `run_id` (D-04) it happened under. Never fabricated or invented for this
-> document — see `notes/failures.local.md` for the running log kept during
-> development.
+> document. (A running log was also kept locally during development; it is
+> not committed, so nothing below depends on it.)
 
 ---
 
