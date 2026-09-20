@@ -399,6 +399,37 @@ event's arrival offset in milliseconds. It
 isolates the server's logs and state under `artifacts_regen/api_demo/`, so it
 does not touch the committed evidence.
 
+## Streamlit UI (optional extra)
+
+A simple chat page over the streaming API. It is a thin client of
+`POST /chat/stream` (`src/ui/client.py`) and never imports the graph, so every
+control (input guard, output guard, risk gate, tool-scope gateway, audit trail)
+applies unchanged. It is an extra: `ref-doc.md` lists the CLI as the required
+interface and FastAPI streaming as optional, does not evaluate interface polish,
+and Streamlit is not in its tool table.
+
+```bash
+python -m src.api      # terminal 1: the streaming API on http://127.0.0.1:8000
+python -m src.ui       # terminal 2: the UI on http://127.0.0.1:8501
+# equivalent: streamlit run src/ui/app.py
+```
+
+- The **AI disclosure** is shown at the top of the page from the first render.
+- The sidebar picks a **synthetic customer**, shows whether the API is reachable,
+  and starts a **new conversation**.
+- Each turn shows **live progress by node name** (never node content: a worker's
+  draft has not yet passed the output guard), then the single answer, its
+  **sources**, its **risk tier** and a **"flagged for human review"** warning.
+- The answer is masked again in the UI, and API errors appear as messages, not
+  crashes.
+- **No login:** the customer picked is trusted, like the CLI's `--customer-id`.
+  It binds to loopback only, with usage telemetry off (`.streamlit/config.toml`);
+  do not expose it (`docs/security-approach.md`).
+- Chatting makes live Gemini calls (a few per turn), as the CLI does.
+- Tests are offline: `tests/test_ui_client.py` (client against the real API app
+  with a fake graph) and `tests/test_ui_app.py` (Streamlit's `AppTest` with a fake
+  client).
+
 ## Where each required artifact comes from
 
 Each artifact below is produced by committed code. "Hand-written" means a
@@ -423,6 +454,7 @@ document authored from evidence the code produced.
 | `reports/eval_report.json`, `src/evaluation/harness.py` | `python -m src.cli eval --out reports/eval_report.json`. The committed file has the same content as `eval_report_initial.json`: the run made **before** the three fixes in `docs/failure-analysis.md` (accuracy 0.6); it has not been re-scored |
 | `tests/test_routing.py`, `tests/test_loops.py`, `tests/test_tool_contracts.py` | `pytest -q -m "not live"` |
 | `src/api/` (bonus), `logs/api_demo.log` | `python -m src.api`; `python scripts/demo_api.py --conversations conv-balance,conv-injection` (live Gemini calls) |
+| `src/ui/` (optional extra) | `python -m src.ui` with `python -m src.api` running; tests in `tests/test_ui_client.py`, `tests/test_ui_app.py` |
 
 ## Git workflow
 
@@ -439,6 +471,9 @@ teammates credited on every commit (one as author, the other as the final
 
 ## What is not done
 
+- **Streamlit UI:** built and tested offline (fake client, `AppTest`, and a smoke
+  boot of the real server). A live chat through the UI and the API has not been
+  run, because it needs Gemini calls.
 - **Optimization note** (baseline vs. optimized profile): ref-doc §8.1
   Good-to-Have, deferred; not started.
 - **Re-scoring after the three fixes:** the committed evaluation (accuracy 0.6)

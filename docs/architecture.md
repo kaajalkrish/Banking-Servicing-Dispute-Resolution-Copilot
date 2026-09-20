@@ -183,6 +183,17 @@ Design decisions:
 `scripts/demo_api.py` drives it end to end; the committed run is
 `logs/api_demo.log`.
 
+## 5b. Streamlit UI (optional extra)
+
+`python -m src.ui` serves a chat page (`src/ui/app.py`, with the HTTP logic in
+`src/ui/client.py`) that is a thin client of the streaming API in 5a. It does not
+import the graph, so every control applies unchanged. It shows the AI disclosure
+(CTL-26) at the top from the first render, streams progress by node name only,
+shows the answer with its sources, risk tier and a human-review warning, and masks
+the answer again. It trusts the customer chosen in the sidebar (no authentication)
+and binds to loopback with telemetry off (`.streamlit/config.toml`). Streamlit is
+not in `ref-doc.md`'s tool table; it is an optional extra.
+
 ## 6. Memory tiers (§7.1 Tiered memory)
 
 | Tier | Backing | Module | Scope |

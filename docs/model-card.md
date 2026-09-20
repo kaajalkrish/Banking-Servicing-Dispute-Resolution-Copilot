@@ -90,7 +90,7 @@ Not supported, and not to be assumed safe:
 | Output-risk tiers | Answers are tiered low (cited policy), medium (account data), high (dispute or escalation); high is gated to a human | CTL-09 |
 | Escalation | Out-of-scope, unsafe or looping requests hand off to a human with a safe message | CTL-04, CTL-14, CTL-15 |
 | Abstention | When retrieval does not support an answer, the copilot says so instead of guessing | CTL-22 |
-| AI disclosure | The chat CLI and the streaming API's first event tell the customer they are talking to an AI and that a human decides refunds and disputes | CTL-26 (`src/common/disclosure.py`) |
+| AI disclosure | The chat CLI, the streaming API's first event and the top of the Streamlit UI page tell the customer they are talking to an AI and that a human decides refunds and disputes | CTL-26 (`src/common/disclosure.py`) |
 | Audit | Consequential actions and every tool call are logged | CTL-10, CTL-11 |
 
 ## 7. Evaluation
