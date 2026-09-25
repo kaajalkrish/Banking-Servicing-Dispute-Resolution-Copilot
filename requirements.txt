@@ -44,13 +44,14 @@ pandas==3.0.6
 pyarrow==25.0.1
 
 # --- Security (Phase 4) ---
-# Guardrails-AI + Presidio instead of LLM Guard (team decision): avoids LLM
-# Guard's torch dependency entirely, matching D-09's principle of only what's
-# needed. spaCy's en_core_web_lg is a direct dependency of Presidio's default
-# AnalyzerEngine() construction (auto-downloads on first use if absent).
+# Presidio for PII detection; injection, leakage and scope guards are policy
+# functions in src/guardrails/ (ref-doc.md allows "policy functions"). Neither
+# Guardrails-AI (its pre-built validators need Guardrails Hub downloads) nor
+# LLM Guard (torch dependency) is used, so neither is pinned. spaCy's
+# en_core_web_lg is a direct dependency of Presidio's default AnalyzerEngine()
+# construction (auto-downloads on first use if absent).
 presidio-analyzer==2.2.364
 presidio-anonymizer==2.2.364
-guardrails-ai==0.11.0
 spacy==3.8.16
 
 # --- Evaluation (Phase 5) ---
@@ -61,3 +62,15 @@ spacy==3.8.16
 # .env.example disables its anonymous telemetry (confirmed against the
 # installed 4.2.3's src/deepeval/config/settings.py).
 deepeval==4.2.3
+
+# --- Streaming API bonus (Phase 6) ---
+# Direct dependencies of src/api/ (previously only present transitively via
+# arize-phoenix / mcp). Versions are the ones already installed and verified.
+fastapi==0.141.1
+uvicorn==0.53.0
+httpx==0.28.1
+
+# --- Streamlit UI, optional extra (Phase 6) ---
+# Only for src/ui/ (a thin client of the streaming API). Installed with no changes to
+# the packages pinned above (pandas<4 is accepted; checked with a pip dry run).
+streamlit==1.64.0

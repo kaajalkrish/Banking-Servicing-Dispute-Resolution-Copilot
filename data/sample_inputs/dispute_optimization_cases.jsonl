@@ -1,0 +1,5 @@
+{"customer_id": "C0001", "conversation_id": "g-dsp-001", "turns": ["I need to dispute a charge.", "It's transaction TXN0000001, I don't recognize this merchant"]}
+{"customer_id": "C0001", "conversation_id": "g-dsp-002", "turns": ["I was charged twice for the same Uber ride, transaction TXN0000012 is a duplicate of TXN0000011"]}
+{"customer_id": "C0005", "conversation_id": "g-dsp-003", "turns": ["I want to dispute transaction TXN0000131, I never made this purchase"]}
+{"customer_id": "C0001", "conversation_id": "g-dsp-004", "turns": ["Can I still dispute a transaction that posted 200 days ago as unauthorized?"]}
+{"customer_id": "C0005", "conversation_id": "g-dsp-005", "turns": ["What's the status of dispute DSP00001?"]}

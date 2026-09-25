@@ -1,12 +1,18 @@
 {
   "docs_checked": [
-    "docs\\failure-analysis.md"
+    "docs\\failure-analysis.md",
+    "docs\\risk-register.md",
+    "docs\\model-card.md",
+    "docs\\compliance.md",
+    "docs\\output-risk.md",
+    "docs\\security-approach.md"
   ],
   "known_counts": {
-    "run_id": 98,
-    "trace_id": 15,
-    "span_id": 528
+    "run_id": 119,
+    "trace_id": 773,
+    "span_id": 6810
   },
+  "controls_checked": 26,
   "unresolved": [],
   "ok": true
 }

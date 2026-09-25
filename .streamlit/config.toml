@@ -1,0 +1,6 @@
+# Optional Streamlit UI (src/ui/app.py). Loopback only, and no usage telemetry.
+[server]
+address = "127.0.0.1"
+
+[browser]
+gatherUsageStats = false

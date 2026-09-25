@@ -1120,6 +1120,17 @@ Write the citation-gated governance pack, document the OAuth/secrets-rotation ap
 - Body: Remove stray files, confirm .gitignore/.env.example, update README phase-status table, confirm no Dockerfile/compose exists, confirm `ref-doc.md` untouched (`git log -- ref-doc.md` shows one commit).
 - Refs: §6.2, NFR-01, NFR-07
 
+**Deviations decided while building Phase 6 (recorded after the fact; commit bodies carry the detail):**
+- **Count:** 24 commits on the branch against 18 planned. P6-02 (control catalog) was already committed in Phase 5 (`b73b527`).
+- **P6-07 / P6-08 (output-risk sample):** built with **zero API calls**. `scripts/output_risk_sample.py` joins the real answers in `reports/eval_report.json` with the real tiers in `logs/agent_actions.jsonl` by run_id, instead of running requests live. Three cases whose recorded answer is the recursion fallback (FA-03) are excluded and listed.
+- **P6-12 (API demo):** ran live on `conv-balance` and `conv-injection` only, with `gemini-3.1-flash-lite`. It was run twice: the first log gave every event one timestamp and was discarded after the script was fixed to log each event as it arrives.
+- **P6-15 / P6-16 (`repro_check`):** skipped: not required by ref-doc §7 or §8, and it would cost real Gemini quota. The manifest and citation report were still generated and committed (P6-16, offline part).
+- **Extra commits:** citations to uncommitted files fixed (found by the extended verifier); AI-disclosure banner (`src/common/disclosure.py`) and control CTL-26; FastAPI/uvicorn/httpx pinned in `requirements.txt`; `scripts/scan_evidence_for_pii.py` fixed (hex ids, UUIDs and float fractions were flagged as card numbers) and `reports/pii_scan.json` regenerated clean; manifest extended to supporting evidence.
+- **Fixes made after checking the repo line by line against ref-doc.md:** the failure analysis now cites Phoenix `trace_id` and `span_id` for each failure and the FA-03 fix commit; the README and model card explain why Phoenix's dashboard shows cost $0 while the report computes about $0.44; the unused `guardrails-ai` pin was removed (guards are policy functions plus Presidio, which ref-doc §8 allows); `tests/test_tool_contracts.py` covers `get_dispute_status`'s success shape.
+- **Golden-set size:** the scored evaluation uses 30 of the 47 authored cases by team decision (P5-03); ref-doc sets no minimum, so this is not treated as a gap.
+- **Streamlit UI (added after the audit, optional extra):** `src/ui/` is a thin client of the streaming API with 25 offline tests and a smoke boot of the real server. It is outside `ref-doc.md` §4's tool table and worth no marks (§2: interface polish is not evaluated); it has no authentication and binds to loopback. A live chat through UI and API was not run.
+- **Not done:** the optional §8.1 optimization note (P5-11 to P5-15) and a re-score of the evaluation after the three fixes.
+
 ### 11.4 Exit checklist
 ```bash
 pytest -q -m "not live"
@@ -1301,23 +1312,23 @@ Commit IDs refer to §6–§11. "gold" = golden-set cases in `data/golden_set/go
 
 ## 13. Final pre-submission checklist (run before zipping, and again on the office laptop after the merges)
 
-- [ ] Every path in `ref-doc.md` §7.1–§7.7 exists and is non-empty (`python scripts/verify_submission.py`).
-- [ ] Every citation resolves: failure-analysis `run_id/trace_id/span_id` exist in `traces/phoenix_spans.parquet`; tool-log records exist; every `CTL-xx` and path cited in governance docs exists (`python scripts/verify_citations.py`).
-- [ ] Tool names in `logs/tool_calls.jsonl` reconcile with code (`reports/tool_reconciliation.json` OK).
-- [ ] `traces/phoenix_spans.parquet` has spans for the supervisor + ≥3 workers and every tool call, with latencies.
-- [ ] `reports/golden_signals.json` has p50/p95 latency by thinking/acting/tool, tokens in/out, cost estimate, accuracy and hallucination rate; `reports/dashboard.png` and `reports/dashboard_data.csv` both exist.
-- [ ] `reports/eval_report.json` (DeepEval, judge = Gemini) has hallucination and faithfulness/relevance over the golden set.
-- [ ] Tests pass offline: `pytest -q -m "not live"`; `tests/test_routing.py`, `test_loops.py`, `test_tool_contracts.py`, `test_memory_persistence.py` present.
-- [ ] `logs/agent_actions.jsonl` has actor, action, tool, decision, timestamp on every consequential action.
-- [ ] No secrets in the tree or history (`python scripts/check_secrets.py`); `.env` untracked; `.gitignore` covers `.env`; `.env.example` has placeholders only.
-- [ ] No plaintext PAN/account numbers in any log, trace or report (`python scripts/scan_evidence_for_pii.py`).
-- [ ] Gemini-only: no other model-provider library in `requirements.txt`; judge is Gemini.
-- [ ] Synthetic data only; no real data anywhere.
-- [ ] No Docker/compose/k8s files (§6.2).
-- [ ] One documented command runs the copilot; a second regenerates traces + eval; sample inputs committed (README).
-- [ ] §8.1 all done: FastAPI streaming + demo log; Presidio before/after sample; red-team set + results; optimization note with two Phoenix-derived reports.
-- [ ] `git log --first-parent main` = root + 6 merge commits; `git log --merges | wc -l` ≥ 6; no direct commits on `main` after the root; every commit has a `Co-authored-by:` trailer; both teammates appear as authors.
-- [ ] `ref-doc.md` unchanged: `git log --oneline -- ref-doc.md` shows exactly one commit.
+- [x] Every path in `ref-doc.md` §7.1–§7.7 exists and is non-empty (`python scripts/verify_submission.py`). — verified: 49/49 checks pass.
+- [x] Every citation resolves: failure-analysis `run_id/trace_id/span_id` exist in `traces/phoenix_spans.parquet`; tool-log records exist; every `CTL-xx` and path cited in governance docs exists (`python scripts/verify_citations.py`). — verified: 6 docs, 26 controls, all resolve.
+- [x] Tool names in `logs/tool_calls.jsonl` reconcile with code (`reports/tool_reconciliation.json` OK). — part of the 49 verify_submission checks.
+- [x] `traces/phoenix_spans.parquet` has spans for the supervisor + ≥3 workers and every tool call, with latencies. — part of the 49 verify_submission checks.
+- [x] `reports/golden_signals.json` has p50/p95 latency by thinking/acting/tool, tokens in/out, cost estimate, accuracy and hallucination rate; `reports/dashboard.png` and `reports/dashboard_data.csv` both exist. — part of the 49 verify_submission checks.
+- [x] `reports/eval_report.json` (DeepEval, judge = Gemini) has hallucination and faithfulness/relevance over the golden set. — part of the 49 verify_submission checks.
+- [x] Tests pass offline: `pytest -q -m "not live"`; `tests/test_routing.py`, `test_loops.py`, `test_tool_contracts.py`, `test_memory_persistence.py` present. — verified: 355 passed, 1 deselected (live); the only 2 failures are the git-merges checks in `tests/test_requirements_traceability.py`, which correctly fail until the item below is done — not a regression.
+- [x] `logs/agent_actions.jsonl` has actor, action, tool, decision, timestamp on every consequential action. — part of the 49 verify_submission checks.
+- [x] No secrets in the tree or history (`python scripts/check_secrets.py`); `.env` untracked; `.gitignore` covers `.env`; `.env.example` has placeholders only. — verified clean.
+- [x] No plaintext PAN/account numbers in any log, trace or report (`python scripts/scan_evidence_for_pii.py`). — verified clean.
+- [x] Gemini-only: no other model-provider library in `requirements.txt`; judge is Gemini. — verified: no openai/anthropic/litellm in requirements.txt (transitive-only via deepeval, documented in docs/check.md).
+- [x] Synthetic data only; no real data anywhere. — verified: `data/synthetic/` (accounts, customers, disputes_seed, transactions), generated by `scripts/generate_synthetic_data.py --seed 42`.
+- [x] No Docker/compose/k8s files (§6.2). — part of the 49 verify_submission checks.
+- [x] One documented command runs the copilot; a second regenerates traces + eval; sample inputs committed (README). — verified: both commands present in README.md.
+- [x] §8.1 all done: FastAPI streaming + demo log; Presidio before/after sample; red-team set + results; optimization note with two Phoenix-derived reports. — all five now done, including the optimization note (`docs/optimization-note.md`, `reports/optimization_comparison.json`), completed after the rest.
+- [ ] `git log --first-parent main` = root + 6 merge commits; `git log --merges | wc -l` ≥ 6; no direct commits on `main` after the root; every commit has a `Co-authored-by:` trailer; both teammates appear as authors. — **the one deliberately-deferred item (NFR-07):** verified today `main` still has only the root commit (0 merges) — waiting on a real Git host; steps are in `docs/delivery-runbook.md`.
+- [x] `ref-doc.md` unchanged: `git log --oneline -- ref-doc.md` shows exactly one commit. — verified: exactly one commit (the root commit).
 
 ---
 

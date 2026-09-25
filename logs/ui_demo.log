@@ -1,0 +1,17 @@
+2026-09-21T18:50:13.864+00:00 INFO started server pid=21604 on http://127.0.0.1:63805 (state isolated in artifacts_regen/ui_demo)
+2026-09-21T18:50:46.567+00:00 OK   server is healthy
+2026-09-21T18:50:48.759+00:00 OK   first render: title='Banking Servicing Copilot' sidebar=['API ready']
+2026-09-21T18:50:48.759+00:00 REQ  chat_input customer=C0001 message='What is my current balance?'
+2026-09-21T18:51:01.439+00:00 EVT  chat_message roles: ['user', 'assistant']
+2026-09-21T18:51:01.439+00:00 EVT  markdown: What is my current balance?
+2026-09-21T18:51:01.439+00:00 EVT  markdown: Checked your message (input_guard)
+2026-09-21T18:51:01.439+00:00 EVT  markdown: Recalled earlier context (load_memory)
+2026-09-21T18:51:01.439+00:00 EVT  markdown: Prepared the context (build_context)
+2026-09-21T18:51:01.439+00:00 EVT  markdown: Chose the right specialist (supervisor)
+2026-09-21T18:51:01.439+00:00 EVT  markdown: Looked up your account (account_servicing)
+2026-09-21T18:51:01.439+00:00 EVT  markdown: Chose the right specialist (supervisor)
+2026-09-21T18:51:01.439+00:00 EVT  markdown: Checked the answer (finalize)
+2026-09-21T18:51:01.439+00:00 EVT  markdown: Saved context for next time (save_memory)
+2026-09-21T18:51:01.439+00:00 EVT  markdown: Your checking account (ending in ****1945) has a current balance of $3,023.36 USD.
+2026-09-21T18:51:01.439+00:00 EVT  caption: Risk tier: medium
+2026-09-21T18:51:01.439+00:00 OK   turn rendered in 12680 ms

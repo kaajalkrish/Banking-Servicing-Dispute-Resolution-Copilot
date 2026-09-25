@@ -3,9 +3,10 @@
 > Real failures found in the P5-06 evidence run (`reports/eval_report_initial.json`,
 > 30 golden-set cases, `gemini-3.1-flash-lite`), each cited to a real committed
 > tool-log record (`logs/tool_calls.jsonl` / `logs/agent_actions.jsonl`) and the
-> exact `run_id` (D-04) it happened under. Never fabricated or invented for this
-> document — see `notes/failures.local.md` for the running log kept during
-> development.
+> exact `run_id` (D-04) it happened under, plus the Phoenix `trace_id` and
+> `span_id` of the spans that show it. Never fabricated or invented for this
+> document. (A running log was also kept locally during development; it is
+> not committed, so nothing below depends on it.)
 
 ---
 
@@ -29,6 +30,11 @@ Five of the eight initial mismatches (`g-txn-002`, `g-txn-003`, `g-pol-006`,
 genuine `dispute_intake` cases (customers actually filing a dispute) routed
 correctly, isolating the bug to intent misclassification, not a broken
 dispute worker.
+
+**Phoenix spans.** trace_id `dde2e954d84bfb653898aad8cfcdef18`. span_id
+`25f67d419861a984` is the `dispute` worker span that handled the informational
+question, and span_id `e8a3fc65565dcf3b` is the `finalize` span that returned
+the escalation.
 
 **Root cause.** `src/agents/supervisor.py`'s routing prompt described the
 `dispute` route by *topic* ("a disputed / unauthorized / duplicate
@@ -57,6 +63,13 @@ confusion:
 `{"run_id": "run-805ab749-...", "agent": "dispute", "tool_name": "check_dispute_eligibility", "args": {"transaction_id": "DSP00001", ...}, "result": {"error": {"type": "LookupError", "message": "transaction DSP00001 not found"}}}`
 and the same `transaction_id: "DSP00001"` mistake repeated in the following
 `create_dispute_case` call, also erroring `LookupError`.
+
+**Phoenix spans.** trace_id `6ae8d16ab395c839815d1e9d52df49fd`. span_id
+`9275a17917f0cc46` is the `check_dispute_eligibility` tool span and span_id
+`d23bcbb3a96f6a2c` the `create_dispute_case` tool span, both called with the
+dispute id as a transaction id. Their span status is OK because the
+resilience wrapper returns the `LookupError` as a structured result instead of
+raising; the error is in the spans' output.
 
 **Root cause.** `src/agents/dispute.py` had exactly one code path: extract a
 transaction id, check eligibility, draft a case. There was no notion of a
@@ -93,6 +106,12 @@ returned to the caller for this same `run_id` was the recursion-fallback
 message, not that answer. `g-pol-007` and `g-pol-008` showed the identical
 pattern.
 
+**Phoenix spans.** trace_id `e553c712972c901644402309a6426801`. span_id
+`d3416020af6dcd74` is the `finalize` span (status OK: the answer was
+computed), span_id `7a1597529a98a119` is the `save_memory` span that followed
+it (status ERROR), and span_id `c48b05fa12bf347e` is the root `LangGraph`
+span, which ended in ERROR.
+
 **Root cause.** `save_memory_node` (`src/graph.py`) runs *after*
 `finalize_node` and had no error handling around its call to LangMem's
 extractor. A LangMem extraction failure (a real, separately-observed pydantic
@@ -105,7 +124,7 @@ turn looped" apart from "a best-effort cleanup step after a good answer
 failed," and discarded the already-correct `final_answer` in favor of the
 generic fallback.
 
-**Fix.** Commit (this session, `src/graph.py`) — wrapped
+**Fix.** Commit `6d013f2` (`src/graph.py`) — wrapped
 `save_memory_node`'s call to `extract_and_store` in a broad
 `try/except: pass`. A memory-write failure is now silently best-effort
 (matching its actual importance relative to the customer-facing answer)

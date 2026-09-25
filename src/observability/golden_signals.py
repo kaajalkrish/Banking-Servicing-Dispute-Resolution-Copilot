@@ -17,10 +17,23 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
+
+# Windows terminals often default to a non-UTF-8 codepage; Phoenix's own
+# launch_app() unconditionally prints an emoji, which crashes with
+# UnicodeEncodeError on cp1252 unless stdout is reconfigured first. src/cli.py
+# already does this for every CLI entry point that goes through it, but this
+# module is also invoked directly (`python -m src.observability.golden_signals`,
+# documented in the README/plan.md), which bypasses that fix entirely (found
+# live: a direct invocation crashed here even though the identical code path
+# works fine through `src.cli regenerate`).
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="replace")
 
 from src.observability.export import get_all_spans
 from src.observability.pricing import (

@@ -21,6 +21,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from src.common.disclosure import AI_DISCLOSURE
 from src.common.masking import mask_text
 from src.config import settings
 
@@ -84,6 +85,23 @@ async def _answer_for(out: dict[str, Any]) -> str:
     return ans
 
 
+def recursion_fallback_state() -> dict[str, Any]:
+    """The safe, escalated answer returned when a turn hits LangGraph's hard
+    recursion limit (NFR-04). Shared by the CLI and the streaming API so both
+    degrade identically."""
+    return {
+        "final_answer": {
+            "answer": (
+                "This request needs a human banking agent — it took too many "
+                "steps to resolve automatically."
+            ),
+            "requires_human_review": True,
+            "risk_tier": "high",
+            "escalated": True,
+        }
+    }
+
+
 async def _invoke_turn(graph: Any, state: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
     """Invoke the graph for one turn, degrading gracefully (NFR-04) if
     LangGraph's hard recursion_limit is ever hit. Our own step_count guard
@@ -96,17 +114,16 @@ async def _invoke_turn(graph: Any, state: dict[str, Any], config: dict[str, Any]
     try:
         return await graph.ainvoke(state, config)
     except GraphRecursionError:
-        return {
-            "final_answer": {
-                "answer": (
-                    "This request needs a human banking agent — it took too many "
-                    "steps to resolve automatically."
-                ),
-                "requires_human_review": True,
-                "risk_tier": "high",
-                "escalated": True,
-            }
-        }
+        return recursion_fallback_state()
+
+
+def chat_banner(customer_id: str, thread_id: str, *, interactive: bool) -> list[str]:
+    """Lines printed before a chat starts. Always leads with the AI
+    disclosure, so the customer knows what they are talking to."""
+    lines = [AI_DISCLOSURE]
+    if interactive:
+        lines.append(f"Chat as {customer_id} (thread {thread_id}). Type 'exit' to quit.")
+    return lines
 
 
 async def cmd_chat(args: argparse.Namespace) -> int:
@@ -145,12 +162,14 @@ async def cmd_chat(args: argparse.Namespace) -> int:
                 )
             _print("copilot> " + await _answer_for(out))
 
+        for line in chat_banner(args.customer_id, thread_id, interactive=not args.message):
+            _print(line)
+
         if args.message:
             await turn(args.message)
             flush_tracing()
             return 0
 
-        _print(f"Chat as {args.customer_id} (thread {thread_id}). Type 'exit' to quit.")
         while True:
             try:
                 text = input("you> ").strip()
