@@ -1,0 +1,83 @@
+[
+  {
+    "account_number": "AC1001571945",
+    "customer_id": "C0001",
+    "type": "checking",
+    "currency": "USD",
+    "balance": 3023.36,
+    "card_number": "4000009083863798",
+    "status": "active"
+  },
+  {
+    "account_number": "AC1000109032",
+    "customer_id": "C0002",
+    "type": "checking",
+    "currency": "USD",
+    "balance": 8772.02,
+    "card_number": "4000005423511618",
+    "status": "active"
+  },
+  {
+    "account_number": "AC1006022676",
+    "customer_id": "C0002",
+    "type": "savings",
+    "currency": "USD",
+    "balance": 7606.02,
+    "card_number": "4000000781618493",
+    "status": "active"
+  },
+  {
+    "account_number": "AC1003226070",
+    "customer_id": "C0003",
+    "type": "checking",
+    "currency": "USD",
+    "balance": 715.93,
+    "card_number": "4000003413164753",
+    "status": "active"
+  },
+  {
+    "account_number": "AC1002728886",
+    "customer_id": "C0003",
+    "type": "savings",
+    "currency": "USD",
+    "balance": 4537.59,
+    "card_number": "4000004192832768",
+    "status": "active"
+  },
+  {
+    "account_number": "AC1003684536",
+    "customer_id": "C0004",
+    "type": "savings",
+    "currency": "USD",
+    "balance": 10559.22,
+    "card_number": "4000000305641393",
+    "status": "active"
+  },
+  {
+    "account_number": "AC1005279424",
+    "customer_id": "C0004",
+    "type": "checking",
+    "currency": "USD",
+    "balance": 8244.67,
+    "card_number": "4000006724238844",
+    "status": "active"
+  },
+  {
+    "account_number": "AC1006700835",
+    "customer_id": "C0005",
+    "type": "savings",
+    "currency": "USD",
+    "balance": 2858.61,
+    "card_number": "4000002871012264",
+    "status": "active"
+  },
+  {
+    "account_number": "AC1001065826",
+    "customer_id": "C0005",
+    "type": "savings",
+    "currency": "USD",
+    "balance": 4863.0,
+    "card_number": "4000007848018450",
+    "status": "active"
+  }
+]

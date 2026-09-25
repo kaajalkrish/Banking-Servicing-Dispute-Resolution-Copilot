@@ -1,0 +1,26 @@
+[
+  {
+    "dispute_id": "DSP00001",
+    "transaction_id": "TXN0000131",
+    "account_number": "AC1001065826",
+    "reason": "unrecognized_charge",
+    "status": "under_review",
+    "opened_date": "2026-05-09"
+  },
+  {
+    "dispute_id": "DSP00002",
+    "transaction_id": "TXN0000107",
+    "account_number": "AC1005279424",
+    "reason": "duplicate_charge",
+    "status": "under_review",
+    "opened_date": "2026-08-22"
+  },
+  {
+    "dispute_id": "DSP00003",
+    "transaction_id": "TXN0000101",
+    "account_number": "AC1005279424",
+    "reason": "unrecognized_charge",
+    "status": "open",
+    "opened_date": "2026-07-26"
+  }
+]

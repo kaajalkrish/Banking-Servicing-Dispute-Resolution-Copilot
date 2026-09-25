@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "banking-servicing-copilot"
+version = "0.1.0"
+description = "Banking Servicing & Dispute-Resolution Copilot — production-grade LangGraph multi-agent system (BC-AAIE-HACK-01)"
+requires-python = ">=3.11"
+readme = "README.md"
+
+# Runtime dependencies are pinned in requirements.txt (installed with pip).
+# This file exists so the repo is an importable package and tooling can find it.
+
+[tool.setuptools]
+packages = [
+    "src",
+    "src.agents",
+    "src.tools",
+    "src.context",
+    "src.memory",
+    "src.observability",
+    "src.guardrails",
+    "src.evaluation",
+    "src.common",
+    "src.api",
+    "mcp_server",
+]
+
+[tool.pytest.ini_options]
+# Mirrored in pytest.ini for tools that read either; keep them in sync.
+markers = [
+    "live: tests that make real Gemini API calls (require GOOGLE_API_KEY); excluded by default",
+]
+asyncio_mode = "auto"

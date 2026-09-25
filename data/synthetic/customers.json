@@ -1,0 +1,32 @@
+[
+  {
+    "customer_id": "C0001",
+    "name": "Liam Stone",
+    "email": "liam.stone@example.test",
+    "authenticated": true
+  },
+  {
+    "customer_id": "C0002",
+    "name": "Olivia Patel",
+    "email": "olivia.patel@example.test",
+    "authenticated": true
+  },
+  {
+    "customer_id": "C0003",
+    "name": "Emma Chen",
+    "email": "emma.chen@example.test",
+    "authenticated": true
+  },
+  {
+    "customer_id": "C0004",
+    "name": "Liam Rivera",
+    "email": "liam.rivera@example.test",
+    "authenticated": true
+  },
+  {
+    "customer_id": "C0005",
+    "name": "Mia Stone",
+    "email": "mia.stone@example.test",
+    "authenticated": true
+  }
+]
