@@ -215,12 +215,25 @@ async def build_context_node(state: dict[str, Any], *, summarizer_llm: Any) -> d
 
 async def save_memory_node(state: dict[str, Any], *, memory_extractor: Any) -> dict[str, Any]:
     """Extract and persist durable facts from this conversation (§7.1 Tiered
-    memory) so a return visit can recall them via load_memory_node."""
+    memory) so a return visit can recall them via load_memory_node.
+
+    Runs AFTER finalize_node, so its only job from here is a best-effort
+    memory write -- the customer-facing answer is already decided. A failure
+    here must never destroy that answer: real incident found live (FA-03) --
+    LangMem's extractor raised (observed as both a pydantic validation error
+    and, separately, a GraphRecursionError from its own internal graph), and
+    since save_memory_node had no error handling, that exception propagated
+    up through graph.ainvoke() and was caught by cli.py's _invoke_turn generic
+    GraphRecursionError handler, which discarded the already-correct finalize
+    answer and returned the generic "took too many steps" fallback instead."""
     from src.memory.long_term import extract_and_store
 
     messages = state.get("messages", [])
     if messages and memory_extractor is not None:
-        await extract_and_store(memory_extractor, state["customer_id"], messages)
+        try:
+            await extract_and_store(memory_extractor, state["customer_id"], messages)
+        except Exception:  # noqa: BLE001 - best-effort; never sacrifice a good answer for this
+            pass
     return {}
 
 

@@ -60,6 +60,12 @@ class ExtractedDisputeFields(BaseModel):
     transaction_id: str | None = Field(
         default=None, description="A transaction id mentioned, e.g. TXN0001234, else null."
     )
+    dispute_id: str | None = Field(
+        default=None,
+        description="An existing dispute case id mentioned, e.g. DSP00001, else null. "
+        "Set this when the customer is asking about a dispute they already filed "
+        "(status, follow-up), not when reporting a new problem.",
+    )
     reason_hint: Literal[
         "unrecognized_charge", "duplicate_charge", "goods_not_received", "billing_error", "unclear"
     ] = "unclear"

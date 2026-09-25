@@ -151,7 +151,12 @@ async def answer_node(state: RagState, *, llm: Any) -> dict[str, Any]:
         ],
     )
     answer = extract_text(getattr(resp, "content", resp))
-    citations = [{"doc_id": c["doc_id"], "section": c["section"]} for c in retrieved]
+    # "text" carries the retrieved passage itself (Phase 5's eval harness uses
+    # it as DeepEval retrieval_context); FinalAnswer's Citation schema doesn't
+    # declare it, so it's silently dropped once this flows through
+    # finalize_node's FinalAnswer(...) -- the harness reads it from the raw
+    # worker_results state instead, before that validation strips it.
+    citations = [{"doc_id": c["doc_id"], "section": c["section"], "text": c["text"]} for c in retrieved]
     return {"answer": answer, "citations": citations, "abstained": False}
 
 

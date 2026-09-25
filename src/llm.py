@@ -17,6 +17,23 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 
 from src.config import settings
 
+# Real Gemini request count (every attempt, including ones that fail and
+# retry) since the last reset -- used by src.evaluation.harness to report
+# how many calls each golden-set case actually took (asked for explicitly
+# so a live run's progress/cost is visible while it runs, not just at the
+# end). Not used by the graph/CLI itself; a plain module-level counter is
+# enough since the harness runs cases sequentially, not concurrently.
+_call_count = 0
+
+
+def reset_call_count() -> None:
+    global _call_count
+    _call_count = 0
+
+
+def call_count() -> int:
+    return _call_count
+
 _ROLE_MODELS = {
     "default": lambda: settings.gemini_model,
     "fast": lambda: settings.gemini_model_fast,
@@ -33,7 +50,17 @@ _TRANSIENT_MARKERS = (
     "deadline",
     "rate limit",
     "overloaded",
+    "timeout",
+    "timed out",
 )
+
+# Exception type names to treat as transient even when str(exc) is empty --
+# a real, observed failure: asyncio/httpx TimeoutError instances frequently
+# carry no message at all, so a pure substring check on str(exc) silently
+# missed every one of them and let a timeout crash the whole run instead of
+# retrying (found live during a 20-case eval run; see harness.py's commit
+# history / notes/failures.local.md for the exact incident).
+_TRANSIENT_EXCEPTION_TYPES = ("TimeoutError", "ConnectionError", "ConnectTimeout", "ReadTimeout")
 
 
 def get_llm(
@@ -59,6 +86,8 @@ def get_llm(
 
 
 def _is_transient(exc: Exception) -> bool:
+    if type(exc).__name__ in _TRANSIENT_EXCEPTION_TYPES:
+        return True
     msg = str(exc).lower()
     return any(marker in msg for marker in _TRANSIENT_MARKERS)
 
@@ -76,10 +105,12 @@ async def ainvoke_with_backoff(
     Non-transient errors propagate immediately (e.g. an invalid API key), so real
     configuration problems surface fast rather than being retried in a loop.
     """
+    global _call_count
     retries = settings.max_retries if max_retries is None else max_retries
     attempt = 0
     while True:
         try:
+            _call_count += 1
             return await llm.ainvoke(messages)
         except Exception as exc:  # noqa: BLE001 - re-raised unless transient
             if not _is_transient(exc) or attempt >= retries:

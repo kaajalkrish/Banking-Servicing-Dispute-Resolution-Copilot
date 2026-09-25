@@ -33,6 +33,24 @@ async def dispute_node(state: dict[str, Any], *, tools: list[Any], llm: Any) -> 
     iso = isolate_for_worker(state, "dispute")
     text = latest_user_text(iso)
     fields = await extract_dispute_fields(llm, text)
+    customer_id = iso["customer_id"]
+
+    # Status check on an existing dispute is a read, not a new filing -- it
+    # doesn't need eligibility re-checked or a second case drafted (found
+    # live: without this branch, "what's the status of dispute DSP00001"
+    # created a brand-new duplicate draft instead of just answering).
+    if fields.dispute_id and not fields.transaction_id:
+        status_tool = get_tool(tools, "get_dispute_status", authenticated_customer_id=customer_id)
+        status_result = await status_tool.ainvoke({"customer_id": customer_id, "dispute_id": fields.dispute_id})
+        answer = await compose_answer(
+            llm,
+            SYSTEM,
+            f"Customer asked about dispute {fields.dispute_id}: {text}\n"
+            f"Status lookup result: {json.dumps(status_result, default=str)}\n\n"
+            "Report the dispute's current status factually. Do not promise a refund "
+            "or state an outcome that isn't in the status result.",
+        )
+        return record_result(state, "dispute", answer, citations=[])
 
     if not fields.transaction_id:
         msg = (
@@ -42,7 +60,6 @@ async def dispute_node(state: dict[str, Any], *, tools: list[Any], llm: Any) -> 
         return record_result(state, "dispute", msg, requires_human_review=True)
 
     reason = fields.reason_hint if fields.reason_hint != "unclear" else "unrecognized_charge"
-    customer_id = iso["customer_id"]
 
     # tools are already resilient + logged (P3-07 registry) — just invoke.
     eligibility_tool = get_tool(tools, "check_dispute_eligibility", authenticated_customer_id=customer_id)
