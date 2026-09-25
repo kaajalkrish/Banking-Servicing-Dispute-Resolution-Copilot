@@ -28,3 +28,17 @@ sentence-transformers==6.1.0
 
 # --- Memory (Phase 2) ---
 langmem==0.0.30
+
+# --- Observability (Phase 3, mandated) ---
+# arize-phoenix pinned to 14.6.0 deliberately: 14.7.0+ adds a pydantic-ai
+# dependency whose fastmcp client requires mcp>=2.0 (FastMCP was renamed to
+# MCPServer there), which breaks our mcp==1.30.0-based mcp_server/server.py
+# and langchain-mcp-adapters. 14.6.0 is the newest release before that
+# dependency was introduced (verified against PyPI's per-version metadata).
+# If arize-phoenix is ever upgraded past this, mcp_server/server.py must be
+# migrated to mcp 2.x's MCPServer API first.
+arize-phoenix==14.6.0
+openinference-instrumentation-langchain==0.1.76
+opentelemetry-sdk==1.44.0
+pandas==3.0.6
+pyarrow==25.0.1

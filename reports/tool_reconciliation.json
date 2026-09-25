@@ -1,0 +1,25 @@
+{
+  "defined_tools": [
+    "check_dispute_eligibility",
+    "create_dispute_case",
+    "get_account_balance",
+    "get_dispute_status",
+    "get_statement_summary",
+    "list_recent_transactions",
+    "policy_search",
+    "submit_service_request"
+  ],
+  "logged_tools": [
+    "check_dispute_eligibility",
+    "create_dispute_case",
+    "get_account_balance",
+    "get_dispute_status",
+    "get_statement_summary",
+    "list_recent_transactions",
+    "policy_search",
+    "submit_service_request"
+  ],
+  "unknown_in_logs": [],
+  "never_exercised": [],
+  "ok": true
+}

@@ -7,8 +7,17 @@ to a temp directory instead of the committed logs/ tree.
 from __future__ import annotations
 
 import asyncio
+import os
 
 import pytest
+
+# Set BEFORE any test module (transitively) imports src.config, whose `settings`
+# is a module-level singleton resolved once at first import — a later
+# monkeypatch.setenv() has no effect on it (this bit us once already in
+# Phase 2's memory tests; STATE_DIR has the same issue). Phoenix starting a
+# real local web server for every one of 40+ test runs would be slow and
+# noisy, so it's off by default; tests that want live tracing set it back.
+os.environ.setdefault("PHOENIX_ENABLED", "false")
 
 
 @pytest.fixture(autouse=True)

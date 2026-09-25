@@ -56,3 +56,20 @@ async def resilient_ainvoke(
         delay = min(10.0, 0.5 * (2 ** attempt)) * (0.5 + random.random())
         attempt += 1
         await asyncio.sleep(delay)
+
+
+class ResilientTool:
+    """Wraps a tool so every ``.ainvoke()`` call automatically goes through
+    resilient_ainvoke (P3-07 registry composes this with LoggedTool so a
+    timeout/retry-exhausted failure still gets logged with status='error')."""
+
+    def __init__(self, tool: Any, *, timeout: float | None = None, retries: int | None = None) -> None:
+        self._tool = tool
+        self.name = getattr(tool, "name", getattr(tool, "__name__", "tool"))
+        self._timeout = timeout
+        self._retries = retries
+
+    async def ainvoke(self, tool_input: dict[str, Any]) -> Any:
+        return await resilient_ainvoke(
+            self._tool, tool_input, tool_name=self.name, timeout=self._timeout, retries=self._retries
+        )

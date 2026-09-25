@@ -20,7 +20,6 @@ from typing import Any
 from src.agents._common import compose_answer, get_tool, latest_user_text, memory_context_block, record_result
 from src.context.isolate import isolate_for_worker
 from src.context.quarantine import extract_dispute_fields
-from src.tools.resilience import resilient_ainvoke
 
 SYSTEM = (
     "You are a retail-bank dispute intake assistant. You may DRAFT a dispute for a "
@@ -45,33 +44,28 @@ async def dispute_node(state: dict[str, Any], *, tools: list[Any], llm: Any) -> 
     reason = fields.reason_hint if fields.reason_hint != "unclear" else "unrecognized_charge"
     customer_id = iso["customer_id"]
 
+    # tools are already resilient + logged (P3-07 registry) — just invoke.
     eligibility_tool = get_tool(tools, "check_dispute_eligibility")
-    eligibility = await resilient_ainvoke(
-        eligibility_tool,
-        {"customer_id": customer_id, "transaction_id": fields.transaction_id, "reason": reason},
-        tool_name="check_dispute_eligibility",
+    eligibility = await eligibility_tool.ainvoke(
+        {"customer_id": customer_id, "transaction_id": fields.transaction_id, "reason": reason}
     )
 
     # RAG citation enriches the explanation; it never decides eligibility.
     citation: dict[str, str] | None = None
     rag_tool = get_tool(tools, "policy_search")
     if rag_tool is not None:
-        rag_result = await resilient_ainvoke(
-            rag_tool, {"query": f"dispute eligibility window for {reason}"}, tool_name="policy_search"
-        )
+        rag_result = await rag_tool.ainvoke({"query": f"dispute eligibility window for {reason}"})
         if isinstance(rag_result, dict) and rag_result.get("citations"):
             citation = rag_result["citations"][0]
 
     dispute_tool = get_tool(tools, "create_dispute_case")
-    dispute_result = await resilient_ainvoke(
-        dispute_tool,
+    dispute_result = await dispute_tool.ainvoke(
         {
             "customer_id": customer_id,
             "transaction_id": fields.transaction_id,
             "reason": reason,
             "description": text[:500],
-        },
-        tool_name="create_dispute_case",
+        }
     )
 
     answer = await compose_answer(
