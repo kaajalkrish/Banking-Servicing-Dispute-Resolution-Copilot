@@ -14,10 +14,12 @@ the copilot never resolves or commits an outcome (D-13).
 
 from __future__ import annotations
 
+import asyncio
 import json
 from typing import Any
 
 from src.agents._common import compose_answer, get_tool, latest_user_text, memory_context_block, record_result
+from src.config import settings
 from src.context.isolate import isolate_for_worker
 from src.context.quarantine import extract_dispute_fields
 
@@ -63,27 +65,44 @@ async def dispute_node(state: dict[str, Any], *, tools: list[Any], llm: Any) -> 
 
     # tools are already resilient + logged (P3-07 registry) — just invoke.
     eligibility_tool = get_tool(tools, "check_dispute_eligibility", authenticated_customer_id=customer_id)
-    eligibility = await eligibility_tool.ainvoke(
-        {"customer_id": customer_id, "transaction_id": fields.transaction_id, "reason": reason}
-    )
+    rag_tool = get_tool(tools, "policy_search", authenticated_customer_id=customer_id)
+    dispute_tool = get_tool(tools, "create_dispute_case", authenticated_customer_id=customer_id)
+
+    eligibility_args = {"customer_id": customer_id, "transaction_id": fields.transaction_id, "reason": reason}
+    rag_args = {"query": f"dispute eligibility window for {reason}"}
+    dispute_args = {
+        "customer_id": customer_id,
+        "transaction_id": fields.transaction_id,
+        "reason": reason,
+        "description": text[:500],
+    }
+
+    if settings.optimization_profile == "baseline":
+        # Sequential: the pre-optimization code path, kept only so the §8.1
+        # before/after comparison has real code to compare against (never
+        # used by default — see docs/optimization-note.md).
+        eligibility = await eligibility_tool.ainvoke(eligibility_args)
+        rag_result = await rag_tool.ainvoke(rag_args) if rag_tool is not None else None
+        dispute_result = await dispute_tool.ainvoke(dispute_args)
+    else:
+        # None of these three calls' arguments depend on another call's
+        # result (dispute_args doesn't need eligibility or the citation), so
+        # they can run concurrently (P5-13). Eligibility and dispute creation
+        # are fast local MCP calls; the RAG policy search runs its own
+        # retrieve/grade/answer subgraph and is consistently the slowest of
+        # the three — serializing everything behind it was wasted wall-clock
+        # time for no reason.
+        calls = [eligibility_tool.ainvoke(eligibility_args), dispute_tool.ainvoke(dispute_args)]
+        if rag_tool is not None:
+            calls.append(rag_tool.ainvoke(rag_args))
+        results = await asyncio.gather(*calls)
+        eligibility, dispute_result = results[0], results[1]
+        rag_result = results[2] if rag_tool is not None else None
 
     # RAG citation enriches the explanation; it never decides eligibility.
     citation: dict[str, str] | None = None
-    rag_tool = get_tool(tools, "policy_search", authenticated_customer_id=customer_id)
-    if rag_tool is not None:
-        rag_result = await rag_tool.ainvoke({"query": f"dispute eligibility window for {reason}"})
-        if isinstance(rag_result, dict) and rag_result.get("citations"):
-            citation = rag_result["citations"][0]
-
-    dispute_tool = get_tool(tools, "create_dispute_case", authenticated_customer_id=customer_id)
-    dispute_result = await dispute_tool.ainvoke(
-        {
-            "customer_id": customer_id,
-            "transaction_id": fields.transaction_id,
-            "reason": reason,
-            "description": text[:500],
-        }
-    )
+    if isinstance(rag_result, dict) and rag_result.get("citations"):
+        citation = rag_result["citations"][0]
 
     answer = await compose_answer(
         llm,

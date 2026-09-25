@@ -1,0 +1,46 @@
+{
+  "project": "bank-copilot-optimized",
+  "span_count": 582,
+  "latency_by_class": {
+    "acting": {
+      "p50_ms": 39.789,
+      "p95_ms": 8436.832599999998,
+      "count": 449
+    },
+    "thinking": {
+      "p50_ms": 161.28750000000002,
+      "p95_ms": 1193.201749999999,
+      "count": 118
+    },
+    "tool": {
+      "p50_ms": 8162.329,
+      "p95_ms": 10522.622499999996,
+      "count": 15
+    }
+  },
+  "tokens": {
+    "input_tokens": 31456,
+    "output_tokens": 3884,
+    "llm_call_count": 118
+  },
+  "request_volume": {
+    "request_count": 582,
+    "error_count": 88,
+    "error_rate": 0.15120274914089346
+  },
+  "cost": {
+    "total_usd": 0.0191468,
+    "per_model_usd": {
+      "gemini-3.5-flash-lite": 0.0191468
+    },
+    "models": [
+      "gemini-3.5-flash-lite"
+    ],
+    "price_source_url": "https://ai.google.dev/gemini-api/docs/pricing",
+    "prices_confirmed_on": "2026-09-19",
+    "basis": "paid-tier Standard list price, text input; runs used the free tier, so this is the equivalent cost at list price, not billed spend"
+  },
+  "accuracy": null,
+  "hallucination_rate": null,
+  "eval_report_source": null
+}

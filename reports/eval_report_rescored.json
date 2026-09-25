@@ -1,0 +1,280 @@
+{
+  "metadata": {
+    "timestamp": "2026-09-21T19:34:41.302880+00:00",
+    "git_commit": "bbd7df18248e85b6da063e7712a72c79c9c3c96b",
+    "dataset_path": "data\\golden_set\\golden.jsonl",
+    "dataset_sha256": "13bdffe07757f1adc367a7d7b0129b5de562dcb74cc450a43b0dcd75dc412c7b",
+    "worker_model": "gemini-3.1-flash-lite",
+    "judge_model": "gemini-3.1-flash-lite",
+    "scored": true,
+    "complete": false,
+    "package_versions": {
+      "deepeval": "4.2.3",
+      "langgraph": "1.2.11",
+      "langchain-google-genai": "4.4.0"
+    }
+  },
+  "metrics": {
+    "accuracy": 1.0,
+    "hallucination_rate": 0.0,
+    "faithfulness_mean": 1.0,
+    "answer_relevancy_mean": 0.8571428571428572,
+    "pass_rate_by_category": {
+      "account_balance": 1.0,
+      "account_transactions": 1.0,
+      "account_statement": 1.0,
+      "dispute_intake": 1.0
+    },
+    "case_count": 9,
+    "scored_for_hallucination_faithfulness": 9
+  },
+  "results": [
+    {
+      "id": "g-bal-001",
+      "category": "account_balance",
+      "customer_id": "C0001",
+      "input": "What is my current balance?",
+      "actual_output": "Your current balance for your checking account ending in ****1945 is $3,023.36 USD.",
+      "context": [
+        "Your current balance for your checking account ending in ****1945 is $3,023.36 USD."
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "answer",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-66124bb7-cd36-4018-8e5e-8467548c513b"
+      ],
+      "tags": [
+        "AC-01",
+        "balance"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response is perfectly relevant and directly addresses the user's inquiry with complete accuracy!",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-bal-002",
+      "category": "account_balance",
+      "customer_id": "C0002",
+      "input": "How much money do I have in my checking account?",
+      "actual_output": "You have multiple checking accounts. Could you please specify which one you are inquiring about by providing the last 4 digits of the account number (9032 or 2676)?",
+      "context": [
+        "You have multiple checking accounts. Could you please specify which one you are inquiring about by providing the last 4 digits of the account number (9032 or 2676)?"
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "answer",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-ae40e9a2-63f6-43e5-be68-f639393d80b2"
+      ],
+      "tags": [
+        "AC-01",
+        "balance"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response accurately identifies that it lacks access to your personal financial data, which is the correct and relevant way to address the query.",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-bal-003",
+      "category": "account_balance",
+      "customer_id": "C0002",
+      "input": "What's the balance on my savings account?",
+      "actual_output": "I apologize, but I am unable to retrieve the balance for your savings account at this time. Could you please clarify which account you are referring to? Additionally, please note that for your checking accounts, I have two on file ending in 9032 and 2676.",
+      "context": [
+        "I apologize, but I am unable to retrieve the balance for your savings account at this time. Could you please clarify which account you are referring to? Additionally, please note that for your checking accounts, I have two on file ending in 9032 and 2676."
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "answer",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-40b27ccd-10af-4104-b4e6-ff5aa68f058d"
+      ],
+      "tags": [
+        "AC-01",
+        "balance"
+      ],
+      "answer_relevancy_score": 0.6666666666666666,
+      "answer_relevancy_reason": "The score is 0.67 because the response included unnecessary information about checking accounts, which distracted from the specific inquiry regarding the savings account balance.",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-txn-001",
+      "category": "account_transactions",
+      "customer_id": "C0001",
+      "input": "Show me my recent transactions.",
+      "actual_output": "Here are your 10 most recent transactions for account ending in 1945:\n\n*   **2026-08-22:** Costco, $728.36 (Pending, Fuel)\n*   **2026-08-17:** Whole Foods, 560.46 GBP (Posted, Groceries)\n*   **2026-08-13:** Costco, $872.85 (Posted, Dining)\n*   **2026-08-01:** Uber, $92.78 (Pending, Retail)\n*   **2026-08-01:** Uber, $92.78 (Pending, Retail - Duplicate of TXN0000011)\n*   **2026-07-28:** Netflix, $688.15 (Pending, Dining)\n*   **2026-07-26:** Amazon, $923.39 (Posted, Utilities)\n*   **2026-07-01:** XYZ*TECH, $230.14 (Posted, Fuel)\n*   **2026-06-29:** Amazon, $800.14 (Posted, Dining)\n*   **2026-06-23:** Spotify, $404.00 (Posted, Fuel)",
+      "context": [
+        "Here are your 10 most recent transactions for account ending in 1945:\n\n*   **2026-08-22:** Costco, $728.36 (Pending, Fuel)\n*   **2026-08-17:** Whole Foods, 560.46 GBP (Posted, Groceries)\n*   **2026-08-13:** Costco, $872.85 (Posted, Dining)\n*   **2026-08-01:** Uber, $92.78 (Pending, Retail)\n*   **2026-08-01:** Uber, $92.78 (Pending, Retail - Duplicate of TXN0000011)\n*   **2026-07-28:** Netflix, $688.15 (Pending, Dining)\n*   **2026-07-26:** Amazon, $923.39 (Posted, Utilities)\n*   **2026-07-01:** XYZ*TECH, $230.14 (Posted, Fuel)\n*   **2026-06-29:** Amazon, $800.14 (Posted, Dining)\n*   **2026-06-23:** Spotify, $404.00 (Posted, Fuel)"
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "answer",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-2e9c1273-901f-437d-8573-e69b721c4143"
+      ],
+      "tags": [
+        "AC-01",
+        "transactions"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response is perfectly relevant and directly addresses the user's request for recent transactions with great clarity!",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-txn-002",
+      "category": "account_transactions",
+      "customer_id": "C0001",
+      "input": "Did I get charged twice by Uber?",
+      "actual_output": "Yes, you have two pending charges from Uber on 2026-08-01 for the same amount. Transaction TXN0000012 is identified as a duplicate of transaction TXN0000011. As previously noted, a dispute (Dispute ID DSP01001) has already been initiated for these charges.",
+      "context": [
+        "Yes, you have two pending charges from Uber on 2026-08-01 for the same amount. Transaction TXN0000012 is identified as a duplicate of transaction TXN0000011. As previously noted, a dispute (Dispute ID DSP01001) has already been initiated for these charges."
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "answer",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-b6ce3ae3-0371-497b-bfc6-24febe04b22f"
+      ],
+      "tags": [
+        "AC-01",
+        "transactions",
+        "duplicate"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response is perfectly relevant and directly addresses the user's inquiry with clarity and precision. Great job!",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-txn-003",
+      "category": "account_transactions",
+      "customer_id": "C0001",
+      "input": "Is there a transaction from a merchant I don't recognize?",
+      "actual_output": "Yes, there is one transaction in your recent history marked as unrecognized:\n\n*   **Transaction ID:** TXN0000004\n*   **Date:** 2026-07-01\n*   **Merchant:** XYZ*TECH\n*   **Amount:** 230.14 USD\n*   **Status:** Posted",
+      "context": [
+        "Yes, there is one transaction in your recent history marked as unrecognized:\n\n*   **Transaction ID:** TXN0000004\n*   **Date:** 2026-07-01\n*   **Merchant:** XYZ*TECH\n*   **Amount:** 230.14 USD\n*   **Status:** Posted"
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "answer",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-e353d723-e84b-43a3-9710-67c7e0041ccf"
+      ],
+      "tags": [
+        "AC-01",
+        "transactions",
+        "unrecognized"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response is perfectly relevant and directly addresses the user's inquiry with clarity and precision. Great job!",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-stmt-001",
+      "category": "account_statement",
+      "customer_id": "C0001",
+      "input": "Can you summarize my statement by category?",
+      "actual_output": "For your account ending in 1945, here is the summary of your 12 transactions totaling $6,628.35 USD:\n\n*   **Dining:** $2,779.30\n*   **Groceries:** $1,377.60\n*   **Fuel:** $1,362.50\n*   **Utilities:** $923.39\n*   **Retail:** $185.56",
+      "context": [
+        "For your account ending in 1945, here is the summary of your 12 transactions totaling $6,628.35 USD:\n\n*   **Dining:** $2,779.30\n*   **Groceries:** $1,377.60\n*   **Fuel:** $1,362.50\n*   **Utilities:** $923.39\n*   **Retail:** $185.56"
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "answer",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-1d730572-cdf9-4485-a85d-e1fb7c14e21c"
+      ],
+      "tags": [
+        "AC-01",
+        "statement"
+      ],
+      "answer_relevancy_score": 0.7142857142857143,
+      "answer_relevancy_reason": "The score is 0.71 because while the response addresses the request, it includes extraneous details like the account number and total aggregate amount that do not categorize the expenses as requested.",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-stmt-002",
+      "category": "account_statement",
+      "customer_id": "C0002",
+      "input": "Give me a breakdown of my spending this period.",
+      "actual_output": "To provide you with a breakdown of your spending, could you please specify which account you are inquiring about? You have two checking accounts ending in 9032 and 2676.",
+      "context": [
+        "To provide you with a breakdown of your spending, could you please specify which account you are inquiring about? You have two checking accounts ending in 9032 and 2676."
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "answer",
+      "observed_behavior": "answer",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-ca11a36e-aa44-411e-9a5a-bf47a516fe7d"
+      ],
+      "tags": [
+        "AC-01",
+        "statement"
+      ],
+      "answer_relevancy_score": 1.0,
+      "answer_relevancy_reason": "The score is 1.00 because the response perfectly addresses the request for a spending breakdown with complete accuracy and relevance. Great job!",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    },
+    {
+      "id": "g-dsp-001",
+      "category": "dispute_intake",
+      "customer_id": "C0001",
+      "input": "It's transaction TXN0000001, I don't recognize this merchant",
+      "actual_output": "I can help raise a dispute. Which transaction is it? Please share the transaction id (e.g. TXN0001234) or the date, amount and merchant.",
+      "context": [
+        "I can help raise a dispute. Which transaction is it? Please share the transaction id (e.g. TXN0001234) or the date, amount and merchant."
+      ],
+      "retrieval_context": null,
+      "expected_behavior": "escalate",
+      "observed_behavior": "escalate",
+      "accuracy_match": true,
+      "run_ids": [
+        "run-cbf0e033-14cf-****9543a7e",
+        "run-56e5fa7e-c64c-473d-9a9c-b965bdb5f8b9"
+      ],
+      "tags": [
+        "AC-02",
+        "dispute",
+        "draft-only"
+      ],
+      "answer_relevancy_score": 0.3333333333333333,
+      "answer_relevancy_reason": "The score is 0.33 because the output redundantly repeated the transaction ID already provided in the input, failing to address the user's concern about the unrecognized merchant.",
+      "hallucination_score": 1.0,
+      "hallucination_reason": "The score is 1.00 because the actual output is fully supported by the provided context with no contradictions.",
+      "faithfulness_score": 1.0,
+      "faithfulness_reason": "The score is 1.00 because the actual output is perfectly aligned with the retrieval context, demonstrating excellent accuracy and consistency!"
+    }
+  ]
+}

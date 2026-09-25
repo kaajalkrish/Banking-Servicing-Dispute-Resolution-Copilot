@@ -88,6 +88,20 @@ class Settings:
         default_factory=lambda: _get("PHOENIX_PROJECT", "bank-copilot")
     )
 
+    # --- Optimization profile (§8.1 optimization note) ---
+    # "optimized" (the default) is the current, normal behaviour of the app;
+    # "baseline" reverts to the pre-optimization code path for comparison only
+    # (P5-13's dispute-worker concurrency change). Each profile traces into
+    # its own Phoenix project so a before/after comparison reads two distinct,
+    # real trace histories rather than one mixed one.
+    optimization_profile: str = field(
+        default_factory=lambda: _get("OPTIMIZATION_PROFILE", "optimized")
+    )
+
+    def optimization_phoenix_project(self) -> str:
+        suffix = "baseline" if self.optimization_profile == "baseline" else "optimized"
+        return f"{self.phoenix_project}-{suffix}"
+
     # --- Streaming API (Phase 6 bonus, src/api/) ---
     # Binds to loopback by default: the API trusts the customer_id it is given
     # (real authentication is documented, not built: docs/security-approach.md).

@@ -1,0 +1,70 @@
+{
+  "baseline_report": "reports/golden_signals_baseline_dispute.json",
+  "optimized_report": "reports/golden_signals_optimized_dispute.json",
+  "baseline_project": "bank-copilot-baseline",
+  "optimized_project": "bank-copilot-optimized",
+  "latency_by_class_delta": {
+    "acting": {
+      "baseline_p50_ms": 25.287,
+      "optimized_p50_ms": 39.789,
+      "p50_delta_ms": 14.502000000000002,
+      "baseline_p95_ms": 20728.291899999862,
+      "optimized_p95_ms": 8436.832599999998,
+      "p95_delta_ms": -12291.459299999864
+    },
+    "thinking": {
+      "baseline_p50_ms": 115.5475,
+      "optimized_p50_ms": 161.28750000000002,
+      "p50_delta_ms": 45.74000000000002,
+      "baseline_p95_ms": 23421.237850000027,
+      "optimized_p95_ms": 1193.201749999999,
+      "p95_delta_ms": -22228.036100000027
+    },
+    "tool": {
+      "baseline_p50_ms": 3211.527,
+      "optimized_p50_ms": 8162.329,
+      "p50_delta_ms": 4950.802,
+      "baseline_p95_ms": 14069.198149999997,
+      "optimized_p95_ms": 10522.622499999996,
+      "p95_delta_ms": -3546.5756500000007
+    }
+  },
+  "worker_span_latency": {
+    "span_name": "dispute",
+    "baseline": {
+      "project": "bank-copilot-baseline",
+      "span_name": "dispute",
+      "count": 10,
+      "mean_ms": 30588.3984,
+      "median_ms": 11312.75,
+      "min_ms": 566.765,
+      "max_ms": 119839.738
+    },
+    "optimized": {
+      "project": "bank-copilot-optimized",
+      "span_name": "dispute",
+      "count": 9,
+      "mean_ms": 7825.113666666667,
+      "median_ms": 9760.621000000001,
+      "min_ms": 598.9989999999999,
+      "max_ms": 20061.77
+    },
+    "median_delta_ms": -1552.128999999999
+  },
+  "tokens": {
+    "baseline": {
+      "input_tokens": 18678,
+      "output_tokens": 2610,
+      "llm_call_count": 168
+    },
+    "optimized": {
+      "input_tokens": 31456,
+      "output_tokens": 3884,
+      "llm_call_count": 118
+    }
+  },
+  "span_count": {
+    "baseline": 695,
+    "optimized": 582
+  }
+}
