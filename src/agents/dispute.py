@@ -45,20 +45,20 @@ async def dispute_node(state: dict[str, Any], *, tools: list[Any], llm: Any) -> 
     customer_id = iso["customer_id"]
 
     # tools are already resilient + logged (P3-07 registry) — just invoke.
-    eligibility_tool = get_tool(tools, "check_dispute_eligibility")
+    eligibility_tool = get_tool(tools, "check_dispute_eligibility", authenticated_customer_id=customer_id)
     eligibility = await eligibility_tool.ainvoke(
         {"customer_id": customer_id, "transaction_id": fields.transaction_id, "reason": reason}
     )
 
     # RAG citation enriches the explanation; it never decides eligibility.
     citation: dict[str, str] | None = None
-    rag_tool = get_tool(tools, "policy_search")
+    rag_tool = get_tool(tools, "policy_search", authenticated_customer_id=customer_id)
     if rag_tool is not None:
         rag_result = await rag_tool.ainvoke({"query": f"dispute eligibility window for {reason}"})
         if isinstance(rag_result, dict) and rag_result.get("citations"):
             citation = rag_result["citations"][0]
 
-    dispute_tool = get_tool(tools, "create_dispute_case")
+    dispute_tool = get_tool(tools, "create_dispute_case", authenticated_customer_id=customer_id)
     dispute_result = await dispute_tool.ainvoke(
         {
             "customer_id": customer_id,

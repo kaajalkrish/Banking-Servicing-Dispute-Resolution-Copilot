@@ -94,11 +94,14 @@ wallets" scores ~0.66. Most queries never need an LLM call just to be graded.
 
 ## 5. What's next
 
-- Phase 3 adds Arize Phoenix tracing across this whole graph, a tool-invocation
+- Phase 3 added Arize Phoenix tracing across this whole graph, a tool-invocation
   log, and a trace export.
-- Phase 4 adds input/output guardrails and an audit trail — including the
-  explicit refusal for cross-customer requests noted as a known gap in
-  `STATUS.md` (currently structurally safe by construction, but not yet an
-  explicit refusal message).
+- Phase 4 added an `input_guard` node (ingress PII masking, injection/cross-
+  customer/length checks — a block short-circuits straight to `finalize` with
+  an explicit refusal message, closing the gap this section used to note),
+  tool-scope enforcement at the gateway, output guardrails and an output-risk
+  gate in `finalize_node`, an audit trail (`logs/agent_actions.jsonl`), plus
+  secrets/PII scanners and a red-team attack set — see the README's
+  "Security & guardrails" section for the full list.
 - Phase 6 finalizes this document with trust boundaries and the full tool/MCP
   layout.

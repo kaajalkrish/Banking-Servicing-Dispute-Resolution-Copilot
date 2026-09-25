@@ -32,7 +32,16 @@ def extract_text(content: Any) -> str:
 
 
 def latest_user_text(state: dict[str, Any]) -> str:
-    """Return the text of the most recent human message."""
+    """Return the text of the most recent human message.
+
+    If ingress sanitization has run (graph.py's ingress_input_guard_node,
+    P4-09), the SANITIZED version is preferred so no downstream code
+    (worker prompts, tracing, tool_calls.jsonl) ever sees the raw,
+    PII-containing text (D-10). Falls back to the raw message when no
+    ingress step has run (e.g. a test building state directly)."""
+    sanitized = state.get("ingress", {}).get("sanitized_text")
+    if sanitized is not None:
+        return sanitized
     for msg in reversed(state.get("messages", [])):
         # HumanMessage has type 'human'; be lenient about message representation.
         if getattr(msg, "type", None) == "human" or msg.__class__.__name__ == "HumanMessage":
@@ -41,10 +50,32 @@ def latest_user_text(state: dict[str, Any]) -> str:
     return ""
 
 
-def get_tool(tools: list[Any], name: str) -> Any | None:
+def get_tool(
+    tools: list[Any], name: str, *, authenticated_customer_id: str | None = None
+) -> Any | None:
+    """Find a tool by name. When authenticated_customer_id is given, the tool
+    is wrapped in a ScopeGatewayTool (P4-05) — defense-in-depth: a customer_id
+    argument that ever mismatches the authenticated one is denied and audited,
+    never silently let through."""
     for t in tools:
         if getattr(t, "name", None) == name:
-            return t
+            if authenticated_customer_id is None:
+                return t
+            from src.guardrails.audit import record_action
+            from src.tools.gateway import ScopeGatewayTool
+
+            def _on_denied(tool_name: str, auth_id: str, requested_id: str) -> None:
+                record_action(
+                    actor="gateway",
+                    action="tool_call",
+                    decision="denied",
+                    tool=tool_name,
+                    reason_code="cross_customer_scope_violation",
+                    customer_id=auth_id,
+                    details={"requested_customer_id": requested_id},
+                )
+
+            return ScopeGatewayTool(t, authenticated_customer_id=authenticated_customer_id, on_denied=_on_denied)
     return None
 
 

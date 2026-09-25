@@ -6,9 +6,10 @@ account-servicing, dispute, product-info) over a custom MCP server, grounded in
 policy and instrumented for observability, cost governance, security, compliance
 and evaluation. **Gemini is the only model provider. No Docker, no external DB.**
 
-> Status: **Phase 3 complete** (Phases 1-2 foundation + Arize Phoenix
-> observability: tracing, tool-invocation log, trace export). Later phases
-> fill in the sections marked _(coming)_.
+> Status: **Phase 4 complete** (Phases 1-3 foundation + observability, plus
+> security & guardrails: input/output guardrails, tool-scope enforcement,
+> audit trail, secrets/PII scanners, red-team attack set). Later phases fill
+> in the sections marked _(coming)_.
 
 ## Prerequisites
 
@@ -151,16 +152,91 @@ python -m src.cli chat --customer-id C0001 --message "What is my balance?"
 - `logs/tool_calls.jsonl` — every tool call, resilience+logging-wrapped
   (`src/tools/registry.py`): timestamp, run_id, agent, tool_name, args,
   result, latency_ms, status.
+- `logs/agent_actions.jsonl` — the guardrail/audit trail (see Security above).
 - `logs/mcp_transcript.jsonl` — every MCP tool call + resource read (masked).
 - `logs/memory_test.log` — cross-session memory recall proof (masked; from a
   real Gemini + LangMem run — see above).
 - `traces/phoenix_spans.parquet` — a full traced run's spans (§7.2 Trace export).
+- `reports/secrets_scan.json`, `reports/pii_scan.json`,
+  `reports/pii_redaction_sample.json`, `reports/redteam_results.json`,
+  `docs/redteam-results.md` — Phase 4 scanner/red-team evidence (see Security
+  above).
 - Account and card numbers are always masked (`src/common/masking.py`); no PAN
   is ever written in plaintext.
 - Tests write logs/state to a temp directory by default (Phoenix tracing is
   also disabled by default in tests — `PHOENIX_ENABLED=false`, set in
   `tests/conftest.py`), so the committed `logs/`/`traces/` hold only real,
   machine-generated evidence.
+
+## Security & guardrails (Phase 4)
+
+Every turn passes through `input_guard` before the supervisor and through the
+output-guard chain in `finalize_node` before an answer is returned — these are
+always wired in (`src/graph.py`), not opt-in.
+
+- **Input guardrails** (`src/guardrails/`):
+  - `pii.py` — Presidio (+ custom recognizers for our synthetic account-number
+    and customer-id shapes) detects PII; `ingress.py`'s `sanitize_ingress()`
+    masks it in the customer's raw message **before** it reaches the graph,
+    any prompt, span or log (D-10) — `latest_user_text()` always prefers this
+    sanitized text once ingress has run.
+  - `injection.py` / `input.py` — policy-function pattern detection (no
+    network dependency) for prompt injection, plus a cross-customer-reference
+    check (a message naming a different customer id) and a length cap.
+    `evaluate_input()` runs on the **raw** text (not yet PII-masked), since
+    ingress's blanket customer-id masking would otherwise erase the digits
+    the cross-customer check needs to compare.
+  - A `block` decision short-circuits straight to `finalize` with a safe,
+    reason-specific refusal — the supervisor and every worker are skipped
+    entirely; `requires_human_review` is always set.
+- **Tool-scope enforcement** (`src/tools/gateway.py`): every tool a worker
+  calls is wrapped in a `ScopeGatewayTool` keyed to the authenticated
+  `customer_id` (`src/agents/_common.py`'s `get_tool()`) — a `customer_id`
+  argument that ever mismatches the authenticated one is denied and audited,
+  never silently let through, even if a model tried to supply a different one.
+- **Output guardrails** (`src/guardrails/output.py`), run in `finalize_node`
+  before a `FinalAnswer` is built:
+  - Any PAN/account number in the answer is masked unconditionally.
+  - Another customer's id is blocked (the authenticated customer's own id is
+    left alone).
+  - Refund/dispute-outcome promises ("your refund has been approved", "your
+    dispute has been approved") are rewritten to a drafted-for-human-review
+    message — the copilot never commits an outcome (D-13).
+  - A leaked system prompt is replaced with a safe refusal (not just flagged).
+- **Output-risk tiers** (`src/guardrails/output_risk.py`): every answer is
+  classified `low` / `medium` / `high` by which worker produced it (dispute
+  and escalate_human are always `high` and always gated to human review,
+  regardless of what the worker itself set — a backstop against a future bug
+  forgetting to set `requires_human_review`).
+- **Audit trail** (`src/guardrails/audit.py` → `logs/agent_actions.jsonl`):
+  one masked JSON record per consequential action — `timestamp`, `run_id`,
+  `actor`, `action`, `tool`, `decision`, `reason_code`, a hashed
+  `customer_ref` (never the raw id), `details`. Written for every ingress
+  sanitization/block, every gateway denial, every output sanitization, and
+  every finalized answer.
+- **Scanners:**
+  - `python scripts/check_secrets.py` — flags Google/Gemini-style keys and
+    generic token patterns in the working tree and full git history; verifies
+    `.env` hygiene. Writes `reports/secrets_scan.json`; exits non-zero on any
+    finding.
+  - `python scripts/scan_evidence_for_pii.py` — searches `logs/`, `traces/`,
+    `reports/`, `docs/` for Luhn-valid card numbers or full synthetic account
+    numbers that should have been masked but weren't. Writes
+    `reports/pii_scan.json`; exits non-zero on any finding.
+  - `python scripts/pii_redaction_sample.py` — runs Presidio redaction over a
+    handful of representative messages and writes a before/after sample to
+    `reports/pii_redaction_sample.json` (D-14).
+- **Red-team:** `python scripts/run_redteam.py` (also `python -m src.cli
+  redteam`) runs `data/redteam/attacks.jsonl` (37 attacks across direct/
+  indirect injection, cross-customer access, PAN exfiltration, system-prompt
+  extraction, jailbreak roleplay, encoded-payload obfuscation and multi-turn
+  setups — each tagged with an OWASP LLM Top 10 category) against the real
+  guardrail functions and the real compiled graph with a scripted LLM — no
+  live Gemini call needed. Writes `reports/redteam_results.json` and
+  `docs/redteam-results.md`; a handful of encoded-payload attacks are
+  documented, accepted gaps in the regex-based filter (not exploitable
+  end-to-end, since nothing decodes/executes obfuscated text), everything
+  else must actually pass or the harness exits non-zero.
 
 ## Architecture
 
@@ -169,20 +245,20 @@ See [`docs/architecture.md`](docs/architecture.md) for the full graph diagram
 context-engineering strategies, and the agentic-RAG subgraph. Quick summary:
 
 ```
-CLI → load_memory → build_context → supervisor ─┬─ intake            (clarify ambiguous)
-                                                 ├─ account_servicing (balance / transactions / statement / service requests)
-                                                 ├─ dispute           (eligibility-checked, RAG-cited, draft for human review)
-                                                 ├─ product_info      (agentic RAG over the policy corpus, cites or abstains)
-                                                 ├─ escalate_human    (out-of-scope / high-risk)
-                                                 └─ finalize → save_memory (structured FinalAnswer, then persists new facts)
+CLI → input_guard → load_memory → build_context → supervisor ─┬─ intake            (clarify ambiguous)
+        │ (block: injection /                                 ├─ account_servicing (balance / transactions / statement / service requests)
+        │  cross-customer /                                   ├─ dispute           (eligibility-checked, RAG-cited, draft for human review)
+        │  too-long input)                                    ├─ product_info      (agentic RAG over the policy corpus, cites or abstains)
+        │                                                      ├─ escalate_human    (out-of-scope / high-risk)
+        └──────────────────────────────────────────────────────┴─ finalize (output guard + risk gate) → save_memory (structured FinalAnswer, persists new facts)
 MCP server (stdio): 7 tools + dispute-windows resource, consumed via
-langchain-mcp-adapters. SQLite checkpointer for short-term memory; a
-step/recursion guard stops runaway loops.
+langchain-mcp-adapters, every call scope-gated to the authenticated
+customer_id. SQLite checkpointer for short-term memory; a step/recursion
+guard stops runaway loops.
 ```
 
 ## Coming in later phases
 
-- _Security_ — input/output guardrails, audit trail, Presidio PII, red-team _(Phase 4)_
 - _Evaluation & cost_ — DeepEval (Gemini judge), golden signals, dashboard _(Phase 5)_
 - _Governance_ — risk register, model card, compliance mapping, output-risk _(Phase 6)_
 - _Bonus_ — FastAPI streaming endpoint _(Phase 6)_
