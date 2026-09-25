@@ -6,8 +6,9 @@ account-servicing, dispute, product-info) over a custom MCP server, grounded in
 policy and instrumented for observability, cost governance, security, compliance
 and evaluation. **Gemini is the only model provider. No Docker, no external DB.**
 
-> Status: **Phase 1 complete** (foundation: MCP server, LangGraph graph, CLI,
-> synthetic data, agent tests). Later phases fill in the sections marked _(coming)_.
+> Status: **Phase 2 complete** (Phase 1 foundation + agentic RAG over a policy
+> corpus, context engineering, and tiered short/long-term memory). Later
+> phases fill in the sections marked _(coming)_.
 
 ## Prerequisites
 
@@ -32,8 +33,13 @@ cp .env.example .env          # then edit .env
 ```
 
 Optional overrides (safe defaults applied otherwise): `GEMINI_MODEL`
-(`gemini-2.5-flash`), `GEMINI_MODEL_FAST` (`gemini-2.5-flash-lite`), `LOG_DIR`,
+(`gemini-3.5-flash`), `GEMINI_MODEL_FAST` (`gemini-3.5-flash-lite`), `LOG_DIR`,
 `STATE_DIR`, `MAX_STEPS`, `RECURSION_LIMIT`. See `.env.example`.
+
+> **Gemini free-tier quota note:** the flash-tier model is capped at 20
+> requests/day per project on the free tier. Prefer `GEMINI_MODEL_FAST`
+> (flash-lite, a separate quota) for routing/cheap calls and for local testing
+> where possible; batch live verifications together rather than one-off runs.
 
 ## Generate synthetic data
 
@@ -42,6 +48,22 @@ All data is synthetic (no real customer/account data). Regenerate deterministica
 ```bash
 python scripts/generate_synthetic_data.py --seed 42
 ```
+
+## Build the policy index (agentic RAG)
+
+Required before `product_info`/`dispute` policy questions can be answered
+(they abstain gracefully if the index doesn't exist yet, but won't have
+anything to cite):
+
+```bash
+python scripts/build_policy_index.py
+```
+
+Rebuilding after editing a `data/policy_corpus/*.md` file is safe to re-run —
+chunk ids are deterministic, so it upserts rather than duplicates. **First run
+downloads the local Sentence-Transformers embedding model** (~90MB from
+Hugging Face); this also backs the long-term memory store's semantic search,
+so it only downloads once for both.
 
 ## Run the copilot
 
@@ -66,24 +88,44 @@ pytest -q -m "not live"     # offline, deterministic (fake LLMs); the default
 pytest -q -m live           # tests that call real Gemini (need GOOGLE_API_KEY)
 ```
 
+## Memory & context (Phase 2)
+
+- **Short-term (thread):** the LangGraph SQLite checkpointer persists full
+  state per conversation thread (`data/state/checkpoints.sqlite`, gitignored).
+- **Long-term (semantic):** LangMem + Gemini extract durable facts (stated
+  preferences, prior dispute references) into a per-customer namespace,
+  persisted via a LangGraph `AsyncSqliteStore` (`data/state/memory.sqlite`,
+  gitignored). Recalled automatically at the start of a turn and surfaced in
+  each worker's prompt — see `docs/architecture.md` for the full flow.
+- Verify cross-session recall yourself: `pytest tests/test_memory_persistence.py -m live -q`
+  (writes `logs/memory_test.log`), or try the two-thread scenario in
+  `data/sample_inputs/conversations.jsonl` (`conv-return-visit-session1` then
+  `conv-return-visit-session2`).
+
 ## Logs & evidence
 
 - `logs/mcp_transcript.jsonl` — every MCP tool call + resource read (masked).
+- `logs/memory_test.log` — cross-session memory recall proof (masked; from a
+  real Gemini + LangMem run — see above).
 - Account and card numbers are always masked (`src/common/masking.py`); no PAN
   is ever written in plaintext.
-- Tests write logs to a temp directory, so the committed `logs/` holds only
-  real, machine-generated evidence.
+- Tests write logs/state to a temp directory by default, so the committed
+  `logs/` holds only real, machine-generated evidence.
 
-## Architecture (Phase 1)
+## Architecture
+
+See [`docs/architecture.md`](docs/architecture.md) for the full graph diagram
+(including the memory/context nodes), the tiered-memory design, the
+context-engineering strategies, and the agentic-RAG subgraph. Quick summary:
 
 ```
-CLI → supervisor ─┬─ intake            (clarify ambiguous)
-                  ├─ account_servicing (balance / transactions / statement)
-                  ├─ dispute           (draft dispute for human review)
-                  ├─ product_info      (fees; RAG in Phase 2)
-                  ├─ escalate_human    (out-of-scope / high-risk)
-                  └─ finalize          (structured FinalAnswer)
-MCP server (stdio): 6 tools + dispute-windows resource, consumed via
+CLI → load_memory → build_context → supervisor ─┬─ intake            (clarify ambiguous)
+                                                 ├─ account_servicing (balance / transactions / statement / service requests)
+                                                 ├─ dispute           (eligibility-checked, RAG-cited, draft for human review)
+                                                 ├─ product_info      (agentic RAG over the policy corpus, cites or abstains)
+                                                 ├─ escalate_human    (out-of-scope / high-risk)
+                                                 └─ finalize → save_memory (structured FinalAnswer, then persists new facts)
+MCP server (stdio): 7 tools + dispute-windows resource, consumed via
 langchain-mcp-adapters. SQLite checkpointer for short-term memory; a
 step/recursion guard stops runaway loops.
 ```

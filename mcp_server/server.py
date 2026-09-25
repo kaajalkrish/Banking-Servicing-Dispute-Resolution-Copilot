@@ -105,6 +105,17 @@ def get_dispute_status(dispute_id: str) -> dict:
 
 @mcp.tool()
 @_safe
+def check_dispute_eligibility(customer_id: str, transaction_id: str, reason: str) -> dict:
+    """Check dispute eligibility for a transaction against the dispute-windows
+    reference (deterministic: window days, transaction status, already-disputed).
+    reason must be one of: unrecognized_charge, unauthorized_transaction,
+    duplicate_charge, goods_not_received, billing_error.
+    """
+    return _bank.check_dispute_eligibility(customer_id, transaction_id, reason)
+
+
+@mcp.tool()
+@_safe
 def submit_service_request(customer_id: str, request_type: str, details: str = "") -> dict:
     """Submit a simple service request: card_replacement, statement_copy or limit_change."""
     return _bank.submit_service_request(customer_id, request_type, details)

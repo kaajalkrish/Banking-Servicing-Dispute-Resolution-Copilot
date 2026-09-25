@@ -1,39 +1,82 @@
 """Product-info worker: product, fee and servicing-policy questions (AC-03).
 
-Phase 1 answers from a small static fee reference and abstains when a question
-is outside it. Phase 2 replaces this with the agentic-RAG tool over the policy
-corpus (grounded, cited answers with proper abstention).
+Answers only from policy_search (the agentic-RAG tool over data/policy_corpus)
+with citations, and abstains rather than guessing when the corpus does not
+support an answer -- policy_search itself handles grading, query rewrite and
+the abstention decision (src/tools/rag_tool.py); this worker just calls it and
+surfaces the result.
+
+If policy_search abstains but there IS recalled customer memory available
+(§7.1 Tiered memory), it gets one more chance from memory before giving up: a
+real live run showed a question like "how would you reach me?" gets routed
+here (not to account_servicing, which does read memory) and, without this,
+silently threw away a correctly-recalled contact preference because
+policy_search has no notion of per-customer memory at all. A structured
+decision (not string-matching on the answer text) decides whether memory
+actually answered the question.
 """
 
 from __future__ import annotations
 
 from typing import Any
 
-from src.agents._common import compose_answer, latest_user_text, record_result
+from langchain_core.messages import HumanMessage, SystemMessage
+from pydantic import BaseModel
 
-# Minimal synthetic fee reference (superseded by the RAG policy corpus in P2).
-FEE_REFERENCE = {
-    "monthly_maintenance_fee_usd": 5.0,
-    "overdraft_fee_usd": 30.0,
-    "atm_out_of_network_fee_usd": 3.0,
-    "foreign_transaction_fee_pct": 3.0,
-    "card_replacement_fee_usd": 0.0,
-}
+from src.agents._common import get_tool, latest_user_text, memory_context_block, record_result
+from src.context.isolate import isolate_for_worker
+from src.llm import ainvoke_with_backoff
+from src.tools.resilience import resilient_ainvoke
 
-SYSTEM = (
-    "You are a retail-bank product-and-fee assistant. Answer ONLY from the provided "
-    "fee reference. If the question is not covered by it, say you don't have that "
-    "information yet and offer to connect the customer to the right resource — do "
-    "not guess."
+MEMORY_ANSWER_SYSTEM = (
+    "Using ONLY the customer context provided (not general knowledge), decide "
+    "whether it answers the customer's question. If it does, answer from it "
+    "concisely; if it doesn't, set answered=false."
 )
 
 
-async def product_info_node(state: dict[str, Any], *, tools: list[Any], llm: Any) -> dict[str, Any]:
-    text = latest_user_text(state)
-    answer = await compose_answer(
-        llm,
-        SYSTEM,
-        f"Customer asked: {text}\n\nFee reference (USD unless noted):\n{FEE_REFERENCE}\n\n"
-        "Answer concisely, or abstain if not covered.",
+class MemoryAnswer(BaseModel):
+    answered: bool
+    answer: str = ""
+
+
+async def _try_answer_from_memory(llm: Any, text: str, memory_block: str) -> str | None:
+    structured = llm.with_structured_output(MemoryAnswer)
+    decision: MemoryAnswer = await ainvoke_with_backoff(
+        structured,
+        [
+            SystemMessage(content=MEMORY_ANSWER_SYSTEM),
+            HumanMessage(content=f"Customer asked: {text}\n{memory_block}"),
+        ],
     )
-    return record_result(state, "product_info", answer)
+    return decision.answer if decision.answered else None
+
+
+async def product_info_node(state: dict[str, Any], *, tools: list[Any], llm: Any) -> dict[str, Any]:
+    iso = isolate_for_worker(state, "product_info")
+    text = latest_user_text(iso)
+    tool = get_tool(tools, "policy_search")
+    if tool is None:
+        return record_result(
+            state, "product_info", "That capability is unavailable right now.", requires_human_review=True
+        )
+
+    result = await resilient_ainvoke(tool, {"query": text}, tool_name="policy_search")
+    if isinstance(result, dict) and result.get("ok") is False:
+        # resilient_ainvoke's own timeout/error failure shape
+        return record_result(
+            state, "product_info", "I couldn't look that up right now. Let me connect you to an agent.",
+            requires_human_review=True,
+        )
+
+    answer = result.get("answer", "")
+    citations = result.get("citations", [])
+    abstained = result.get("abstained", False)
+
+    memory_block = memory_context_block(iso)
+    if abstained and memory_block:
+        memory_answer = await _try_answer_from_memory(llm, text, memory_block)
+        if memory_answer:
+            return record_result(state, "product_info", memory_answer, citations=[])
+
+    return record_result(state, "product_info", answer, requires_human_review=abstained, citations=citations)

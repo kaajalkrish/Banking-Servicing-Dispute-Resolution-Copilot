@@ -10,6 +10,8 @@ from __future__ import annotations
 import pytest
 
 from mcp_server import server as srv
+from src.tools.rag_index import get_collection
+from src.tools.rag_tool import PolicySearchTool
 
 # Required input fields per tool (matches mcp_server/server.py signatures).
 REQUIRED_FIELDS = {
@@ -19,6 +21,7 @@ REQUIRED_FIELDS = {
     "create_dispute_case": {"customer_id", "transaction_id", "reason"},
     "get_dispute_status": {"dispute_id"},
     "submit_service_request": {"customer_id", "request_type"},
+    "check_dispute_eligibility": {"customer_id", "transaction_id", "reason"},
 }
 
 
@@ -88,6 +91,16 @@ def test_submit_service_request_output_shape():
     assert out["request_id"].startswith("SR")
 
 
+def test_check_dispute_eligibility_output_shape():
+    cid = srv._bank.accounts[0]["customer_id"]
+    acct = srv._bank.accounts[0]["account_number"]
+    txn = next(t for t in srv._bank.transactions if t["account_number"] == acct)
+    out = srv.check_dispute_eligibility(cid, txn["transaction_id"], "unrecognized_charge")
+    assert set(["eligible", "window_days", "days_since_transaction", "explanation"]) <= set(out)
+    assert isinstance(out["eligible"], bool)
+    assert isinstance(out["explanation"], list)
+
+
 # --- error paths (structured error objects, not exceptions) ---
 
 def test_error_unknown_dispute():
@@ -110,3 +123,57 @@ def test_error_dispute_on_foreign_transaction():
     )
     out = srv.create_dispute_case(cid, other_txn["transaction_id"], "unrecognized_charge")
     assert "error" in out and out["error"]["type"] == "PermissionError"
+
+
+def test_error_check_dispute_eligibility_bad_reason():
+    cid = srv._bank.accounts[0]["customer_id"]
+    acct = srv._bank.accounts[0]["account_number"]
+    txn = next(t for t in srv._bank.transactions if t["account_number"] == acct)
+    out = srv.check_dispute_eligibility(cid, txn["transaction_id"], "i just feel like it")
+    assert "error" in out and out["error"]["type"] == "ValueError"
+
+
+# --- agentic-RAG tool contract (policy_search): input/output schema + abstention ---
+
+
+class _FakeAnswerLLM:
+    """Offline stand-in: composes a fixed answer, never calls an LLM grader
+    (real distance thresholds decide confident/poor for these test queries)."""
+
+    async def ainvoke(self, _messages):
+        from langchain_core.messages import AIMessage
+
+        return AIMessage(content="The overdraft fee is $30 [POL-FEES §Overdraft Fee].")
+
+
+class _FakeOutOfScopeRewriteLLM:
+    """Stand-in whose 'rewrite' also stays out of corpus, so the abstention
+    path doesn't accidentally self-fulfill into a match (a plain fixed-answer
+    fake would return fee-related text, which the rewrite step would then use
+    as the NEXT query and could spuriously match POL-FEES)."""
+
+    async def ainvoke(self, _messages):
+        from langchain_core.messages import AIMessage
+
+        return AIMessage(content="home mortgage refinancing interest rates")
+
+
+@pytest.fixture(scope="module")
+def rag_tool():
+    return PolicySearchTool(collection=get_collection(), llm=_FakeAnswerLLM())
+
+
+async def test_policy_search_input_output_schema(rag_tool):
+    out = await rag_tool.ainvoke({"query": "what is the overdraft fee"})
+    assert set(["answer", "citations", "abstained"]) <= set(out)
+    assert isinstance(out["citations"], list)
+    assert isinstance(out["abstained"], bool)
+    for c in out["citations"]:
+        assert set(["doc_id", "section"]) <= set(c)
+
+
+async def test_policy_search_abstains_on_out_of_corpus_topic():
+    tool = PolicySearchTool(collection=get_collection(), llm=_FakeOutOfScopeRewriteLLM())
+    out = await tool.ainvoke({"query": "what is my mortgage interest rate"})
+    assert out["abstained"] is True
+    assert out["citations"] == []

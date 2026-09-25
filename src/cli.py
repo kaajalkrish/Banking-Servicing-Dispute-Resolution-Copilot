@@ -80,18 +80,22 @@ async def _answer_for(out: dict[str, Any]) -> str:
 async def cmd_chat(args: argparse.Namespace) -> int:
     from src.graph import build_graph, open_checkpointer, run_config
     from src.llm import get_llm
+    from src.memory.long_term import build_extractor, open_memory_store
     from src.state import new_state
 
     settings.require_api_key()  # fail fast with a clear message if unset
     tools = await _load_tools()
     thread_id = args.thread_id or f"chat-{args.customer_id}"
+    worker_llm = get_llm("default")
 
-    async with open_checkpointer() as saver:
+    async with open_checkpointer() as saver, open_memory_store() as mstore:
         graph = build_graph(
             supervisor_llm=get_llm("fast"),
-            worker_llm=get_llm("default"),
+            worker_llm=worker_llm,
             tools=tools,
             checkpointer=saver,
+            memory_store=mstore,
+            memory_extractor=build_extractor(worker_llm, mstore),
         )
 
         async def turn(text: str) -> None:
@@ -121,6 +125,7 @@ async def cmd_chat(args: argparse.Namespace) -> int:
 async def cmd_run(args: argparse.Namespace) -> int:
     from src.graph import build_graph, open_checkpointer, run_config
     from src.llm import get_llm
+    from src.memory.long_term import build_extractor, open_memory_store
     from src.state import new_state
 
     settings.require_api_key()
@@ -130,13 +135,16 @@ async def cmd_run(args: argparse.Namespace) -> int:
         return 1
     conversations = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
     tools = await _load_tools()
+    worker_llm = get_llm("default")
 
-    async with open_checkpointer() as saver:
+    async with open_checkpointer() as saver, open_memory_store() as mstore:
         graph = build_graph(
             supervisor_llm=get_llm("fast"),
-            worker_llm=get_llm("default"),
+            worker_llm=worker_llm,
             tools=tools,
             checkpointer=saver,
+            memory_store=mstore,
+            memory_extractor=build_extractor(worker_llm, mstore),
         )
         for conv in conversations:
             cid = conv["customer_id"]
@@ -153,9 +161,13 @@ async def cmd_run(args: argparse.Namespace) -> int:
 
 
 async def _load_tools() -> list[Any]:
+    from src.llm import get_llm
     from src.mcp_client import get_mcp_tools
+    from src.tools.rag_tool import PolicySearchTool
 
-    return await get_mcp_tools()
+    mcp_tools = await get_mcp_tools()
+    rag_tool = PolicySearchTool(llm=get_llm("default"))
+    return [*mcp_tools, rag_tool]
 
 
 # --------------------------------------------------------------------------- #

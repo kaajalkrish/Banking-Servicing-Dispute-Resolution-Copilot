@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-import re
 from typing import Any
 
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from src.llm import ainvoke_with_backoff
-
-_TXN_RE = re.compile(r"\bTXN\d{3,}\b", re.IGNORECASE)
 
 
 def extract_text(content: Any) -> str:
@@ -44,16 +41,22 @@ def latest_user_text(state: dict[str, Any]) -> str:
     return ""
 
 
-def find_transaction_id(text: str) -> str | None:
-    m = _TXN_RE.search(text or "")
-    return m.group(0).upper() if m else None
-
-
 def get_tool(tools: list[Any], name: str) -> Any | None:
     for t in tools:
         if getattr(t, "name", None) == name:
             return t
     return None
+
+
+def memory_context_block(state: dict[str, Any]) -> str:
+    """Format recalled long-term memories (built by graph.py's build_context_node
+    from src/context/select.py) as a short block for an LLM prompt, or "" if
+    there is nothing recalled for this turn."""
+    memories = state.get("context", {}).get("memories", [])
+    if not memories:
+        return ""
+    bullet_list = "\n".join(f"- {m}" for m in memories)
+    return f"\nKnown context about this customer from prior sessions:\n{bullet_list}\n"
 
 
 async def compose_answer(llm: Any, system: str, human: str) -> str:
